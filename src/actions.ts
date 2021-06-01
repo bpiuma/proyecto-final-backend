@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { getRepository } from 'typeorm'  // getRepository"  traer una tabla de la base de datos asociada al objeto
 import { User } from './entities/User'
+import { Product } from './entities/Product'
 import { Exception } from './utils'
 import jwt from 'jsonwebtoken'
 import fetch from 'cross-fetch'
@@ -27,6 +28,49 @@ export const createUser = async (req: Request, res:Response): Promise<Response> 
 export const getUsers = async (req: Request, res: Response): Promise<Response> =>{
 		const users = await getRepository(User).find();
 		return res.json(users);
+}
+
+export const createBaseProducts = async (req: Request, res: Response): Promise<Response> => {
+    const baseURL = "https://gist.githubusercontent.com/ajubin/d331f3251db4bd239c7a1efd0af54e38/raw/058e1ad07398fc62ab7f3fcc13ef1007a48d01d7/wine-data-set.json";
+
+    const fetchProductsData = await fetch(baseURL)
+        .then(async res => {
+            if (res.status >= 400) {
+                throw new Error("Bad response from server");
+            }
+            const responseJson = await res.json();
+            return responseJson.results;
+        })
+        .then(async product => {
+            product.map(async (item: any, index: any) => {
+                req.body.points = item.points 
+                req.body.title = item.title
+                req.body.description = item.description
+                req.body.taster_name = item.taster_name
+                req.body.taster_twitter_handle = item.taster_twitter_handle
+                req.body.price = item.price
+                req.body.designation = item.designation
+                req.body.variety = item.variety
+                req.body.region_1 = item.region_1
+                req.body.region_2 = item.region_2
+                req.body.province = item.province
+                req.body.country = item.country
+                req.body.image = ""
+                req.body.winery = item.winery
+                const newProduct = getRepository(Product).create(req.body);  //Creo por cada iteración el producto
+                const results = await getRepository(Product).save(newProduct); //Grabo el nuevo personaje
+            });
+
+        })
+        .catch(err => {
+            console.error(err);
+        });
+
+    const r = {
+        message: "All Products are created",
+        state: true
+    }
+    return res.json(r);
 }
 
 export const login = async (req: Request, res: Response): Promise<Response> => {
