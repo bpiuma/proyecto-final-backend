@@ -24,36 +24,50 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 exports.__esModule = true;
-exports.Users = void 0;
+exports.Company = void 0;
 var typeorm_1 = require("typeorm");
-var Users = /** @class */ (function (_super) {
-    __extends(Users, _super);
-    function Users() {
+var Product_1 = require("./Product");
+var Store_1 = require("./Store");
+var Company = /** @class */ (function (_super) {
+    __extends(Company, _super);
+    function Company() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     __decorate([
         typeorm_1.PrimaryGeneratedColumn(),
         __metadata("design:type", Number)
-    ], Users.prototype, "id");
-    __decorate([
-        typeorm_1.Column(),
-        __metadata("design:type", String)
-    ], Users.prototype, "first_name");
-    __decorate([
-        typeorm_1.Column(),
-        __metadata("design:type", String)
-    ], Users.prototype, "last_name");
+    ], Company.prototype, "id");
     __decorate([
         typeorm_1.Column({ unique: true }),
         __metadata("design:type", String)
-    ], Users.prototype, "email");
+    ], Company.prototype, "name");
     __decorate([
         typeorm_1.Column(),
         __metadata("design:type", String)
-    ], Users.prototype, "password");
-    Users = __decorate([
+    ], Company.prototype, "address");
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", Number)
+    ], Company.prototype, "phone_1");
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", Number)
+    ], Company.prototype, "phone_2");
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", String)
+    ], Company.prototype, "site_url");
+    __decorate([
+        typeorm_1.OneToMany(function () { return Product_1.Product; }, function (product) { return product.company; }),
+        __metadata("design:type", Array)
+    ], Company.prototype, "products");
+    __decorate([
+        typeorm_1.ManyToOne(function () { return Store_1.Store; }, function (store) { return store.companies; }),
+        __metadata("design:type", Store_1.Store)
+    ], Company.prototype, "store");
+    Company = __decorate([
         typeorm_1.Entity()
-    ], Users);
-    return Users;
+    ], Company);
+    return Company;
 }(typeorm_1.BaseEntity));
-exports.Users = Users;
+exports.Company = Company;

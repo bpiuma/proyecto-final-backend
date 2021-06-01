@@ -24,33 +24,31 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 exports.__esModule = true;
-exports.Planet = void 0;
+exports.EventUserProduct = void 0;
 var typeorm_1 = require("typeorm");
-var Users_1 = require("./Users");
-var Planet = /** @class */ (function (_super) {
-    __extends(Planet, _super);
-    function Planet() {
+var Product_1 = require("./Product");
+var User_1 = require("./User");
+var Event_1 = require("./Event");
+var EventUserProduct = /** @class */ (function (_super) {
+    __extends(EventUserProduct, _super);
+    function EventUserProduct() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
     __decorate([
-        typeorm_1.PrimaryGeneratedColumn(),
-        __metadata("design:type", Number)
-    ], Planet.prototype, "id");
+        typeorm_1.ManyToOne(function () { return User_1.User; }, function (user) { return user.eventProduct; }, { primary: true }),
+        __metadata("design:type", User_1.User)
+    ], EventUserProduct.prototype, "user");
     __decorate([
-        typeorm_1.Column({ unique: true }),
-        __metadata("design:type", String)
-    ], Planet.prototype, "name");
+        typeorm_1.ManyToOne(function () { return Product_1.Product; }, function (product) { return product.eventUser; }, { primary: true }),
+        __metadata("design:type", Product_1.Product)
+    ], EventUserProduct.prototype, "product");
     __decorate([
-        typeorm_1.Column({ nullable: true }),
-        __metadata("design:type", String)
-    ], Planet.prototype, "picture_url");
-    __decorate([
-        typeorm_1.ManyToMany(function () { return Users_1.Users; }, function (user) { return user.planets; }),
-        __metadata("design:type", Array)
-    ], Planet.prototype, "users");
-    Planet = __decorate([
+        typeorm_1.ManyToOne(function () { return Event_1.Event; }, function (event) { return event.userProduct; }, { primary: true }),
+        __metadata("design:type", Event_1.Event)
+    ], EventUserProduct.prototype, "event");
+    EventUserProduct = __decorate([
         typeorm_1.Entity()
-    ], Planet);
-    return Planet;
+    ], EventUserProduct);
+    return EventUserProduct;
 }(typeorm_1.BaseEntity));
-exports.Planet = Planet;
+exports.EventUserProduct = EventUserProduct;

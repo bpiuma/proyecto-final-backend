@@ -14,110 +14,111 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 exports.__esModule = true;
-exports.User = void 0;
+exports.Product = void 0;
 var typeorm_1 = require("typeorm");
+var Company_1 = require("./Company");
 var UserFavoriteProduct_1 = require("./UserFavoriteProduct");
 var Tasting_1 = require("./Tasting");
 var Cart_1 = require("./Cart");
 var EventUserProduct_1 = require("./EventUserProduct");
-var bcrypt = __importStar(require("bcryptjs"));
-var class_validator_1 = require("class-validator");
-var User = /** @class */ (function (_super) {
-    __extends(User, _super);
-    function User() {
+var Product = /** @class */ (function (_super) {
+    __extends(Product, _super);
+    function Product() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
-    User.prototype.hashPassword = function () {
-        this.password = bcrypt.hashSync(this.password, 8);
-    };
-    User.prototype.checkIfUnencryptedPasswordIsValid = function (unencryptedPassword) {
-        return bcrypt.compareSync(unencryptedPassword, this.password);
-    };
     __decorate([
         typeorm_1.PrimaryGeneratedColumn(),
         __metadata("design:type", Number)
-    ], User.prototype, "id");
+    ], Product.prototype, "id");
     __decorate([
         typeorm_1.Column(),
-        __metadata("design:type", String)
-    ], User.prototype, "first_name");
-    __decorate([
-        typeorm_1.Column(),
-        __metadata("design:type", String)
-    ], User.prototype, "last_name");
+        __metadata("design:type", Number)
+    ], Product.prototype, "points");
     __decorate([
         typeorm_1.Column({ unique: true }),
         __metadata("design:type", String)
-    ], User.prototype, "email");
-    __decorate([
-        typeorm_1.Column(),
-        class_validator_1.Length(4, 100),
-        __metadata("design:type", String)
-    ], User.prototype, "password");
+    ], Product.prototype, "title");
     __decorate([
         typeorm_1.Column(),
         __metadata("design:type", String)
-    ], User.prototype, "address");
+    ], Product.prototype, "description");
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", String)
+    ], Product.prototype, "taster_name");
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", String)
+    ], Product.prototype, "taster_twitter_handle");
     __decorate([
         typeorm_1.Column(),
         __metadata("design:type", Number)
-    ], User.prototype, "phone_1");
+    ], Product.prototype, "price");
     __decorate([
         typeorm_1.Column(),
-        __metadata("design:type", Number)
-    ], User.prototype, "phone_2");
+        __metadata("design:type", String)
+    ], Product.prototype, "designation");
     __decorate([
-        typeorm_1.Column({ type: 'timestamptz', nullable: false }),
-        __metadata("design:type", Date)
-    ], User.prototype, "date_of_birth");
+        typeorm_1.Column(),
+        __metadata("design:type", String)
+    ], Product.prototype, "variety");
     __decorate([
-        typeorm_1.OneToMany(function () { return UserFavoriteProduct_1.UserFavoriteProduct; }, function (userFavoriteProduct) { return userFavoriteProduct.user; }),
+        typeorm_1.Column(),
+        __metadata("design:type", String)
+    ], Product.prototype, "region_1");
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", String)
+    ], Product.prototype, "region_2");
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", String)
+    ], Product.prototype, "province");
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", String)
+    ], Product.prototype, "country");
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", String)
+    ], Product.prototype, "winery");
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", String)
+    ], Product.prototype, "image");
+    __decorate([
+        typeorm_1.ManyToOne(function () { return Company_1.Company; }, function (company) { return company.products; }),
+        __metadata("design:type", Company_1.Company)
+    ], Product.prototype, "company");
+    __decorate([
+        typeorm_1.OneToMany(function () { return UserFavoriteProduct_1.UserFavoriteProduct; }, function (userFavoriteProduct) { return userFavoriteProduct.product; }),
         __metadata("design:type", Array)
-    ], User.prototype, "favorites");
+    ], Product.prototype, "users");
     __decorate([
         typeorm_1.OneToMany(function () { return Tasting_1.Tasting; }, function (tasting) { return tasting.product; }),
         __metadata("design:type", Array)
-    ], User.prototype, "tastings");
+    ], Product.prototype, "tastings");
     __decorate([
-        typeorm_1.OneToMany(function () { return Cart_1.Cart; }, function (cart) { return cart.user; }),
+        typeorm_1.OneToMany(function () { return Cart_1.Cart; }, function (cart) { return cart.product; }),
         __metadata("design:type", Array)
-    ], User.prototype, "carts");
+    ], Product.prototype, "carts");
     __decorate([
-        typeorm_1.OneToMany(function () { return EventUserProduct_1.EventUserProduct; }, function (eventUserProduct) { return eventUserProduct.user; }),
+        typeorm_1.OneToMany(function () { return EventUserProduct_1.EventUserProduct; }, function (eventUserProduct) { return eventUserProduct.product; }),
         __metadata("design:type", Array)
-    ], User.prototype, "eventProduct");
-    User = __decorate([
+    ], Product.prototype, "eventUser");
+    Product = __decorate([
         typeorm_1.Entity()
-    ], User);
-    return User;
+    ], Product);
+    return Product;
 }(typeorm_1.BaseEntity));
-exports.User = User;
+exports.Product = Product;
