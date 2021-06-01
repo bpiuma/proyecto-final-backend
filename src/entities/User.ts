@@ -25,7 +25,13 @@ export class User extends BaseEntity {
     @Column()
     @Length(4, 100)
     password: string;
+    hashPassword() {
+        this.password = bcrypt.hashSync(this.password, 8);
+    }
 
+    checkIfUnencryptedPasswordIsValid(unencryptedPassword: string) {
+        return bcrypt.compareSync(unencryptedPassword, this.password);
+    }
     @Column()
     address: string;
 
@@ -48,14 +54,5 @@ export class User extends BaseEntity {
     carts: Cart[];
 
     @OneToMany(() => EventUserProduct, eventUserProduct => eventUserProduct.user)
-    eventProduct: EventUserProduct[];
-
-    hashPassword() {
-        this.password = bcrypt.hashSync(this.password, 8);
-    }
-
-    checkIfUnencryptedPasswordIsValid(unencryptedPassword: string) {
-        return bcrypt.compareSync(unencryptedPassword, this.password);
-    }
-
+    eventProduct: EventUserProduct[];    
 }

@@ -47,29 +47,50 @@ var utils_1 = require("./utils");
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var cross_fetch_1 = __importDefault(require("cross-fetch"));
 var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var userRepo, user, newUser, results;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
+    var _a, first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth, userRepo, user, oneUser, newUser, results;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
             case 0:
+                _a = req.body, first_name = _a.first_name, last_name = _a.last_name, email = _a.email, password = _a.password, address = _a.address, phone_1 = _a.phone_1, phone_2 = _a.phone_2, date_of_birth = _a.date_of_birth;
                 // important validations to avoid ambiguos errors, the client needs to understand what went wrong
-                if (!req.body.first_name)
+                if (!first_name)
                     throw new utils_1.Exception("Please provide a first_name");
-                if (!req.body.last_name)
+                if (!last_name)
                     throw new utils_1.Exception("Please provide a last_name");
-                if (!req.body.email)
+                if (!email)
                     throw new utils_1.Exception("Please provide an email");
-                if (!req.body.password)
+                if (!validateEmail(email))
+                    throw new utils_1.Exception("Please provide a valid email address");
+                if (!password)
                     throw new utils_1.Exception("Please provide a password");
+                if (!address)
+                    throw new utils_1.Exception("Please provide an address");
+                if (!phone_1)
+                    throw new utils_1.Exception("Please provide a phone_1");
+                if (!phone_2)
+                    throw new utils_1.Exception("Please provide a phone_2");
+                if (!date_of_birth)
+                    throw new utils_1.Exception("Please provide a date of birth");
                 userRepo = typeorm_1.getRepository(User_1.User);
-                return [4 /*yield*/, userRepo.findOne({ where: { email: req.body.email } })];
+                return [4 /*yield*/, userRepo.findOne({ where: { email: email } })];
             case 1:
-                user = _a.sent();
+                user = _b.sent();
                 if (user)
                     throw new utils_1.Exception("Users already exists with this email");
-                newUser = typeorm_1.getRepository(User_1.User).create(req.body);
+                oneUser = new User_1.User();
+                oneUser.first_name = first_name;
+                oneUser.last_name = last_name;
+                oneUser.email = email;
+                oneUser.password = password;
+                oneUser.hashPassword();
+                oneUser.address = address;
+                oneUser.phone_1 = phone_1;
+                oneUser.phone_2 = phone_2;
+                oneUser.date_of_birth = date_of_birth;
+                newUser = typeorm_1.getRepository(User_1.User).create(oneUser);
                 return [4 /*yield*/, typeorm_1.getRepository(User_1.User).save(newUser)];
             case 2:
-                results = _a.sent();
+                results = _b.sent();
                 return [2 /*return*/, res.json(results)];
         }
     });

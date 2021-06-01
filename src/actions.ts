@@ -7,22 +7,39 @@ import jwt from 'jsonwebtoken'
 import fetch from 'cross-fetch'
 import extend from 'extend'
 
-export const createUser = async (req: Request, res:Response): Promise<Response> =>{
+export const createUser = async (req: Request, res: Response): Promise<Response> => {
+    const { first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth } = req.body;
+    // important validations to avoid ambiguos errors, the client needs to understand what went wrong
+    if (!first_name) throw new Exception("Please provide a first_name")
+    if (!last_name) throw new Exception("Please provide a last_name")
+    if (!email) throw new Exception("Please provide an email")
+    if (!validateEmail(email)) throw new Exception("Please provide a valid email address")
+    if (!password) throw new Exception("Please provide a password")
+    if (!address) throw new Exception("Please provide an address")
+    if (!phone_1) throw new Exception("Please provide a phone_1")
+    if (!phone_2) throw new Exception("Please provide a phone_2")
+    if (!date_of_birth) throw new Exception("Please provide a date of birth")
 
-	// important validations to avoid ambiguos errors, the client needs to understand what went wrong
-	if(!req.body.first_name) throw new Exception("Please provide a first_name")
-	if(!req.body.last_name) throw new Exception("Please provide a last_name")
-	if(!req.body.email) throw new Exception("Please provide an email")
-	if(!req.body.password) throw new Exception("Please provide a password")
+    const userRepo = getRepository(User)
+    // fetch for any user with this email
+    const user = await userRepo.findOne({ where: { email: email } })
+    if (user) throw new Exception("Users already exists with this email")
+    
+    let oneUser = new User();
 
-	const userRepo = getRepository(User)
-	// fetch for any user with this email
-	const user = await userRepo.findOne({ where: {email: req.body.email }})
-	if(user) throw new Exception("Users already exists with this email")
+    oneUser.first_name = first_name;
+    oneUser.last_name = last_name;
+    oneUser.email = email;
+    oneUser.password = password;
+    oneUser.hashPassword();
+    oneUser.address = address;
+    oneUser.phone_1 = phone_1;
+    oneUser.phone_2 = phone_2;
+    oneUser.date_of_birth = date_of_birth;
 
-	const newUser = getRepository(User).create(req.body);  //Creo un usuario
-	const results = await getRepository(User).save(newUser); //Grabo el nuevo usuario 
-	return res.json(results);
+    const newUser = getRepository(User).create(oneUser);  //Creo un usuario
+    const results = await getRepository(User).save(newUser); //Grabo el nuevo usuario 
+    return res.json(results);
 }
 
 export const getUsers = async (req: Request, res: Response): Promise<Response> =>{
