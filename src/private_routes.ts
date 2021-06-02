@@ -11,13 +11,28 @@
  * 
  */
 
-import { Router } from 'express';
+import { Router, Request, NextFunction, Response } from 'express';
 import { safe } from './utils';
 import * as actions from './actions';
+import { verify } from 'crypto';
+import jwt from 'jsonwebtoken';
+import { getRepository } from 'typeorm';
+
+const verifyToken = (req: Request, res: Response, next:NextFunction) =>
+{     
+    const token = req.header('Authorization');
+    if(!token) return res.status(400).json('ACCESS DENIED');
+    if (!actions.refreshTokens.includes(token)) return res.status(403).json("INVALID TOKEN");    
+    const decoded = jwt.verify(token as string, process.env.JWT_KEY as string)
+    req.user = decoded;
+    console.log(decoded);
+    next()
+}
 
 // declare a new router to include all the endpoints
 const router = Router();
 
-router.get('/user', safe(actions.getUsers));
-
+router.get('/user', verifyToken, safe(actions.getUsers));
+router.get('/createBaseProducts', verifyToken, safe(actions.createBaseProducts));
+router.post('/logout', safe(actions.logout));
 export default router;

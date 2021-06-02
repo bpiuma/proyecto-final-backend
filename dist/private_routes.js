@@ -30,11 +30,28 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 exports.__esModule = true;
 var express_1 = require("express");
 var utils_1 = require("./utils");
 var actions = __importStar(require("./actions"));
+var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+var verifyToken = function (req, res, next) {
+    var token = req.header('Authorization');
+    if (!token)
+        return res.status(400).json('ACCESS DENIED');
+    if (!actions.refreshTokens.includes(token))
+        return res.status(403).json("INVALID TOKEN");
+    var decoded = jsonwebtoken_1["default"].verify(token, process.env.JWT_KEY);
+    req.user = decoded;
+    console.log(decoded);
+    next();
+};
 // declare a new router to include all the endpoints
 var router = express_1.Router();
-router.get('/user', utils_1.safe(actions.getUsers));
+router.get('/user', verifyToken, utils_1.safe(actions.getUsers));
+router.get('/createBaseProducts', verifyToken, utils_1.safe(actions.createBaseProducts));
+router.post('/logout', utils_1.safe(actions.logout));
 exports["default"] = router;
