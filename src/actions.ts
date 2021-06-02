@@ -136,9 +136,10 @@ export const logout = async (req: Request, res: Response) => {
     res.status(202).clearCookie('auth-token').send('Success logged out')    
 }
 
+// funcion para validar el formato del email
 const validateEmail = (email: string) => {
-    const res = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return res.test(email);
+    const res = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    return res.test(email)
 }
 
 // funcion para validar el formato del password
@@ -160,3 +161,4 @@ const validatePassword = (pass:string) => {
     }
     return false;
 }
+

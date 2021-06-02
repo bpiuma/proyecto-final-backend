@@ -256,6 +256,7 @@ var logout = function (req, res) { return __awaiter(void 0, void 0, void 0, func
     });
 }); };
 exports.logout = logout;
+// funcion para validar el formato del email
 var validateEmail = function (email) {
     var res = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return res.test(email);
