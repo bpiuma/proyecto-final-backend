@@ -8,7 +8,7 @@
  */
 import { Router } from 'express';
 import { safe } from './utils';
-import { createUser,login, getProducts } from './actions';
+import { createUser,login, getProducts, buscarImg } from './actions';
 
 const router = Router();
 
@@ -17,4 +17,5 @@ router.post('/user', safe(createUser));
 router.post('/login', safe(login));
 
 router.get('/products', safe(getProducts));
+router.post('/getImage', safe(buscarImg));
 export default router;

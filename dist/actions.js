@@ -39,16 +39,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.logout = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
+exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
 var utils_1 = require("./utils");
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var cross_fetch_1 = __importDefault(require("cross-fetch"));
+var image_finder = require('image-search-engine');
 exports.refreshTokens = [];
 var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth, userRepo, user, newUser, results;
+    var _a, first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth, userRepo, user, oneUser, newUser, results;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -83,7 +84,17 @@ var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
                 user = _b.sent();
                 if (user)
                     throw new utils_1.Exception("User already exists with this email");
-                newUser = userRepo.create(req.body);
+                oneUser = new User_1.User();
+                oneUser.first_name = first_name;
+                oneUser.last_name = last_name;
+                oneUser.email = email;
+                oneUser.password = password;
+                oneUser.hashPassword();
+                oneUser.address = address;
+                oneUser.phone_1 = phone_1;
+                oneUser.phone_2 = phone_2;
+                oneUser.date_of_birth = date_of_birth;
+                newUser = userRepo.create(oneUser);
                 return [4 /*yield*/, userRepo.save(newUser)];
             case 2:
                 results = _b.sent();
@@ -146,9 +157,9 @@ var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, 
                         .then(function (product) { return __awaiter(void 0, void 0, void 0, function () {
                         return __generator(this, function (_a) {
                             product.map(function (item, index) { return __awaiter(void 0, void 0, void 0, function () {
-                                var newProduct, results;
-                                return __generator(this, function (_a) {
-                                    switch (_a.label) {
+                                var _a, newProduct, results;
+                                return __generator(this, function (_b) {
+                                    switch (_b.label) {
                                         case 0:
                                             req.body.points = item.points;
                                             req.body.title = item.title;
@@ -162,12 +173,15 @@ var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, 
                                             req.body.region_2 = item.region_2;
                                             req.body.province = item.province;
                                             req.body.country = item.country;
-                                            req.body.image = "";
+                                            _a = req.body;
+                                            return [4 /*yield*/, image_finder.find(item.title, { size: "large" })];
+                                        case 1:
+                                            _a.image = _b.sent();
                                             req.body.winery = item.winery;
                                             newProduct = typeorm_1.getRepository(Product_1.Product).create(req.body);
                                             return [4 /*yield*/, typeorm_1.getRepository(Product_1.Product).save(newProduct)];
-                                        case 1:
-                                            results = _a.sent();
+                                        case 2:
+                                            results = _b.sent();
                                             return [2 /*return*/];
                                     }
                                 });
@@ -217,6 +231,21 @@ var login = function (req, res) { return __awaiter(void 0, void 0, void 0, funct
     });
 }); };
 exports.login = login;
+var buscarImg = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var query, _a, _b;
+    return __generator(this, function (_c) {
+        switch (_c.label) {
+            case 0:
+                query = req.body.query;
+                _b = (_a = res).json;
+                return [4 /*yield*/, image_finder.find(query, { size: "large" })];
+            case 1:
+                _b.apply(_a, [_c.sent()]);
+                return [2 /*return*/];
+        }
+    });
+}); };
+exports.buscarImg = buscarImg;
 var logout = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var token;
     return __generator(this, function (_a) {

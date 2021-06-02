@@ -7,6 +7,8 @@ import jwt from 'jsonwebtoken'
 import fetch from 'cross-fetch'
 import extend from 'extend'
 
+const image_finder = require('image-search-engine')
+
 export let refreshTokens: any[] = [];
 export const createUser = async (req: Request, res: Response): Promise<Response> => {
 
@@ -34,7 +36,18 @@ export const createUser = async (req: Request, res: Response): Promise<Response>
     const user = await userRepo.findOne({ where: { email: req.body.email } })
     if (user) throw new Exception("User already exists with this email")
 
-    const newUser = userRepo.create(req.body);
+    let oneUser = new User();
+
+    oneUser.first_name = first_name;
+    oneUser.last_name = last_name;
+    oneUser.email = email;
+    oneUser.password = password;
+    oneUser.hashPassword();
+    oneUser.address = address;
+    oneUser.phone_1 = phone_1;
+    oneUser.phone_2 = phone_2;
+    oneUser.date_of_birth = date_of_birth;
+    const newUser = userRepo.create(oneUser);
     const results = await userRepo.save(newUser);
     return res.json(results);
 }
@@ -78,7 +91,7 @@ export const createBaseProducts = async (req: Request, res: Response): Promise<R
                 req.body.region_2 = item.region_2
                 req.body.province = item.province
                 req.body.country = item.country
-                req.body.image = ""                
+                req.body.image = await image_finder.find(item.title, {size: "large"})               
                 req.body.winery = item.winery
                 const newProduct = getRepository(Product).create(req.body);  //Creo por cada iteración el producto
                 const results = await getRepository(Product).save(newProduct); //Grabo el nuevo personaje
@@ -113,7 +126,10 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
     return res.cookie('auth-token', token, {httpOnly: true, path:'/', domain: 'localhost'}).json({ token });
 }
 
-
+export const buscarImg = async (req: Request, res: Response) => {
+    const {query} = req.body;
+    res.json(await image_finder.find(query, {size: "large"}));
+}
 export const logout = async (req: Request, res: Response) => {    
     const { token } = req.body;
     refreshTokens = refreshTokens.filter(t => t !== token);
