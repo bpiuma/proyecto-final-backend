@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.logout = exports.login = exports.createBaseProducts = exports.getUsers = exports.createUser = void 0;
+exports.logout = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
@@ -108,13 +108,30 @@ var getUsers = function (req, res) { return __awaiter(void 0, void 0, void 0, fu
     });
 }); };
 exports.getUsers = getUsers;
+var getProducts = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var products;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(Product_1.Product).find({ order: { id: 'ASC' } })];
+            case 1:
+                products = _a.sent();
+                return [2 /*return*/, res.json(products)];
+        }
+    });
+}); };
+exports.getProducts = getProducts;
 var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var baseURL, fetchProductsData, r;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 baseURL = "https://gist.githubusercontent.com/ajubin/d331f3251db4bd239c7a1efd0af54e38/raw/058e1ad07398fc62ab7f3fcc13ef1007a48d01d7/wine-data-set.json";
-                return [4 /*yield*/, cross_fetch_1["default"](baseURL)
+                return [4 /*yield*/, cross_fetch_1["default"](baseURL, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    })
                         .then(function (res) { return __awaiter(void 0, void 0, void 0, function () {
                         var responseJson;
                         return __generator(this, function (_a) {
@@ -126,7 +143,7 @@ var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, 
                                     return [4 /*yield*/, res.json()];
                                 case 1:
                                     responseJson = _a.sent();
-                                    return [2 /*return*/, responseJson.results];
+                                    return [2 /*return*/, responseJson];
                             }
                         });
                     }); })

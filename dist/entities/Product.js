@@ -41,59 +41,59 @@ var Product = /** @class */ (function (_super) {
         __metadata("design:type", Number)
     ], Product.prototype, "id");
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column({ nullable: true }),
         __metadata("design:type", Number)
     ], Product.prototype, "points");
     __decorate([
-        typeorm_1.Column({ unique: true }),
+        typeorm_1.Column({ unique: false, nullable: true }),
         __metadata("design:type", String)
     ], Product.prototype, "title");
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column({ nullable: true }),
         __metadata("design:type", String)
     ], Product.prototype, "description");
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column({ nullable: true }),
         __metadata("design:type", String)
     ], Product.prototype, "taster_name");
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column({ nullable: true }),
         __metadata("design:type", String)
     ], Product.prototype, "taster_twitter_handle");
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column({ nullable: true }),
         __metadata("design:type", Number)
     ], Product.prototype, "price");
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column({ nullable: true }),
         __metadata("design:type", String)
     ], Product.prototype, "designation");
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column({ nullable: true }),
         __metadata("design:type", String)
     ], Product.prototype, "variety");
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column({ nullable: true }),
         __metadata("design:type", String)
     ], Product.prototype, "region_1");
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column({ nullable: true }),
         __metadata("design:type", String)
     ], Product.prototype, "region_2");
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column({ nullable: true }),
         __metadata("design:type", String)
     ], Product.prototype, "province");
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column({ nullable: true }),
         __metadata("design:type", String)
     ], Product.prototype, "country");
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column({ nullable: true }),
         __metadata("design:type", String)
     ], Product.prototype, "winery");
     __decorate([
-        typeorm_1.Column(),
+        typeorm_1.Column({ nullable: true }),
         __metadata("design:type", String)
     ], Product.prototype, "image");
     __decorate([
@@ -101,19 +101,19 @@ var Product = /** @class */ (function (_super) {
         __metadata("design:type", Company_1.Company)
     ], Product.prototype, "company");
     __decorate([
-        typeorm_1.OneToMany(function () { return UserFavoriteProduct_1.UserFavoriteProduct; }, function (userFavoriteProduct) { return userFavoriteProduct.product; }),
+        typeorm_1.OneToMany(function () { return UserFavoriteProduct_1.UserFavoriteProduct; }, function (userFavoriteProduct) { return userFavoriteProduct.product; }, { cascade: true }),
         __metadata("design:type", Array)
     ], Product.prototype, "users");
     __decorate([
-        typeorm_1.OneToMany(function () { return Tasting_1.Tasting; }, function (tasting) { return tasting.product; }),
+        typeorm_1.OneToMany(function () { return Tasting_1.Tasting; }, function (tasting) { return tasting.product; }, { cascade: true }),
         __metadata("design:type", Array)
     ], Product.prototype, "tastings");
     __decorate([
-        typeorm_1.OneToMany(function () { return Cart_1.Cart; }, function (cart) { return cart.product; }),
+        typeorm_1.OneToMany(function () { return Cart_1.Cart; }, function (cart) { return cart.product; }, { cascade: true }),
         __metadata("design:type", Array)
     ], Product.prototype, "carts");
     __decorate([
-        typeorm_1.OneToMany(function () { return EventUserProduct_1.EventUserProduct; }, function (eventUserProduct) { return eventUserProduct.product; }),
+        typeorm_1.OneToMany(function () { return EventUserProduct_1.EventUserProduct; }, function (eventUserProduct) { return eventUserProduct.product; }, { cascade: true }),
         __metadata("design:type", Array)
     ], Product.prototype, "eventUser");
     Product = __decorate([

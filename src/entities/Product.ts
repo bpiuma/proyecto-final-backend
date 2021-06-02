@@ -12,61 +12,61 @@ export class Product extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({nullable: true })
     points: number;
 
-    @Column({ unique: true })
+    @Column({ unique: false, nullable: true })
     title: string;
 
-    @Column()
+    @Column({nullable: true })
     description: string;
 
-    @Column()
+    @Column({nullable: true })
     taster_name: string;
 
-    @Column()
+    @Column({nullable: true })
     taster_twitter_handle: string;
 
-    @Column()
+    @Column({nullable: true })
     price: number;
 
-    @Column()
+    @Column({nullable: true })
     designation: string;
 
-    @Column()
+    @Column({nullable: true })
     variety: string;
 
-    @Column()
+    @Column({nullable: true })
     region_1: string;
 
-    @Column()
+    @Column({nullable: true })
     region_2: string;
 
-    @Column()
+    @Column({nullable: true })
     province: string;
 
-    @Column()
+    @Column({nullable: true })
     country: string;
 
-    @Column()
+    @Column({nullable: true })
     winery: string;
 
-    @Column()
+    @Column({nullable: true })
     image: string;
 
     @ManyToOne(() => Company, company => company.products)
     company: Company;
 
-    @OneToMany(() => UserFavoriteProduct, userFavoriteProduct => userFavoriteProduct.product)
+    @OneToMany(() => UserFavoriteProduct, userFavoriteProduct => userFavoriteProduct.product,{cascade: true})
     users: UserFavoriteProduct[];
 
-    @OneToMany(() => Tasting, tasting => tasting.product)
+    @OneToMany(() => Tasting, tasting => tasting.product,{cascade: true})
     tastings: Tasting[];
 
-    @OneToMany(() => Cart, cart => cart.product)
+    @OneToMany(() => Cart, cart => cart.product,{cascade: true})
     carts: Cart[];
 
-    @OneToMany(() => EventUserProduct, eventUserProduct => eventUserProduct.product)
+    @OneToMany(() => EventUserProduct, eventUserProduct => eventUserProduct.product,{cascade: true})
     eventUser: EventUserProduct[];
 
 }

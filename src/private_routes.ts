@@ -33,4 +33,5 @@ const router = Router();
 
 router.get('/user', safe(actions.getUsers));
 router.get('/createBaseProducts', verifyToken, safe(actions.createBaseProducts));
+
 export default router;

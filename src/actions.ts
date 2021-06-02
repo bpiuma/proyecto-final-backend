@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken'
 import fetch from 'cross-fetch'
 import extend from 'extend'
 
+
 export const createUser = async (req: Request, res: Response): Promise<Response> => {
     const { first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth } = req.body;
     // important validations to avoid ambiguos errors, the client needs to understand what went wrong
@@ -47,16 +48,25 @@ export const getUsers = async (req: Request, res: Response): Promise<Response> =
 		return res.json(users);
 }
 
+export const getProducts = async (req: Request, res: Response): Promise<Response> =>{
+		const products = await getRepository(Product).find({order: {id:'ASC'}});
+		return res.json(products);
+}
 export const createBaseProducts = async (req: Request, res: Response): Promise<Response> => {
     const baseURL = "https://gist.githubusercontent.com/ajubin/d331f3251db4bd239c7a1efd0af54e38/raw/058e1ad07398fc62ab7f3fcc13ef1007a48d01d7/wine-data-set.json";
-
-    const fetchProductsData = await fetch(baseURL)
+    
+    const fetchProductsData = await fetch(baseURL,{
+          headers : { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+           }
+         })
         .then(async res => {
             if (res.status >= 400) {
                 throw new Error("Bad response from server");
             }
-            const responseJson = await res.json();
-            return responseJson.results;
+            const responseJson = await res.json();            
+            return responseJson;
         })
         .then(async product => {
             product.map(async (item: any, index: any) => {
@@ -72,7 +82,7 @@ export const createBaseProducts = async (req: Request, res: Response): Promise<R
                 req.body.region_2 = item.region_2
                 req.body.province = item.province
                 req.body.country = item.country
-                req.body.image = ""
+                req.body.image = ""                
                 req.body.winery = item.winery
                 const newProduct = getRepository(Product).create(req.body);  //Creo por cada iteración el producto
                 const results = await getRepository(Product).save(newProduct); //Grabo el nuevo personaje
