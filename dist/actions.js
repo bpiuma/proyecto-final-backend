@@ -44,9 +44,7 @@ var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la bas
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
 var utils_1 = require("./utils");
-var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-var cross_fetch_1 = __importDefault(require("cross-fetch"));
-exports.refreshTokens = [];
+
 var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth, userRepo, user, newUser, results;
     return __generator(this, function (_b) {
