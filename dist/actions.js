@@ -39,14 +39,59 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.logout = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = void 0;
+exports.logout = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser2 = exports.createUser = exports.refreshTokens = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
 var utils_1 = require("./utils");
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var cross_fetch_1 = __importDefault(require("cross-fetch"));
+exports.refreshTokens = [];
 var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth, userRepo, user, newUser, results;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.body, first_name = _a.first_name, last_name = _a.last_name, email = _a.email, password = _a.password, address = _a.address, phone_1 = _a.phone_1, phone_2 = _a.phone_2, date_of_birth = _a.date_of_birth;
+                // validaciones de campos obligatorios
+                if (!first_name)
+                    throw new utils_1.Exception("Please provide a first_name");
+                if (!last_name)
+                    throw new utils_1.Exception("Please provide a last_name");
+                if (!email)
+                    throw new utils_1.Exception("Please provide an email");
+                if (!password)
+                    throw new utils_1.Exception("Please provide a password");
+                if (!address)
+                    throw new utils_1.Exception("Please provide a address");
+                if (!phone_1)
+                    throw new utils_1.Exception("Please provide a phone_1");
+                if (!phone_2)
+                    throw new utils_1.Exception("Please provide a phone_2");
+                if (!date_of_birth)
+                    throw new utils_1.Exception("Please provide a date_of_birth");
+                // validación del formato de password
+                console.log("largo: ", password.length);
+                //if (!validatePassword(password)) throw new Exception("Please provide a valid password")
+                // validacion del formato de email
+                if (!validateEmail(email))
+                    throw new utils_1.Exception("Please provide a valid email address");
+                userRepo = typeorm_1.getRepository(User_1.User);
+                return [4 /*yield*/, userRepo.findOne({ where: { email: req.body.email } })];
+            case 1:
+                user = _b.sent();
+                if (user)
+                    throw new utils_1.Exception("User already exists with this email");
+                newUser = userRepo.create(req.body);
+                return [4 /*yield*/, userRepo.save(newUser)];
+            case 2:
+                results = _b.sent();
+                return [2 /*return*/, res.json(results)];
+        }
+    });
+}); };
+exports.createUser = createUser;
+var createUser2 = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth, userRepo, user, oneUser, newUser, results;
     return __generator(this, function (_b) {
         switch (_b.label) {
@@ -95,12 +140,12 @@ var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
         }
     });
 }); };
-exports.createUser = createUser;
+exports.createUser2 = createUser2;
 var getUsers = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var users;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, typeorm_1.getRepository(User_1.User).find()];
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(User_1.User).find({ select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth"] })];
             case 1:
                 users = _a.sent();
                 return [2 /*return*/, res.json(users)];
@@ -112,7 +157,7 @@ var getProducts = function (req, res) { return __awaiter(void 0, void 0, void 0,
     var products;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, typeorm_1.getRepository(Product_1.Product).find({ order: { id: 'ASC' } })];
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(Product_1.Product).find({ order: { points: 'DESC' } })];
             case 1:
                 products = _a.sent();
                 return [2 /*return*/, res.json(products)];
@@ -205,7 +250,9 @@ var login = function (req, res) { return __awaiter(void 0, void 0, void 0, funct
                 if (!validateEmail(email))
                     throw new utils_1.Exception("Please provide a valid email address", 400);
                 userRepo = typeorm_1.getRepository(User_1.User);
-                return [4 /*yield*/, userRepo.findOne({ where: { email: email } })];
+                return [4 /*yield*/, userRepo.findOne({
+                        where: { email: email }
+                    })];
             case 1:
                 user = _b.sent();
                 if (!user)
@@ -213,16 +260,17 @@ var login = function (req, res) { return __awaiter(void 0, void 0, void 0, funct
                 if (!user.checkIfUnencryptedPasswordIsValid(password))
                     throw new utils_1.Exception("Invalid password", 401);
                 token = jsonwebtoken_1["default"].sign({ user: user }, process.env.JWT_KEY, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN });
-                res.cookie('currentUser', email);
-                return [2 /*return*/, res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ user: user, token: token })];
+                exports.refreshTokens.push(token);
+                return [2 /*return*/, res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ token: token })];
         }
     });
 }); };
 exports.login = login;
 var logout = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var token;
     return __generator(this, function (_a) {
-        // req.session.destroy();
-        res.status(202).clearCookie('currentUser');
+        token = req.body.token;
+        exports.refreshTokens = exports.refreshTokens.filter(function (t) { return t !== token; });
         res.status(202).clearCookie('auth-token').send('Success logged out');
         return [2 /*return*/];
     });

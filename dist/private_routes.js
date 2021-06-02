@@ -42,6 +42,9 @@ var verifyToken = function (req, res, next) {
     var token = req.header('Authorization');
     if (!token)
         return res.status(400).json('ACCESS DENIED');
+    if (!actions.refreshTokens.includes(token)) {
+        return res.sendStatus(403);
+    }
     var decoded = jsonwebtoken_1["default"].verify(token, process.env.JWT_KEY);
     req.user = decoded;
     console.log(decoded);
@@ -49,6 +52,7 @@ var verifyToken = function (req, res, next) {
 };
 // declare a new router to include all the endpoints
 var router = express_1.Router();
-router.get('/user', utils_1.safe(actions.getUsers));
+router.get('/user', verifyToken, utils_1.safe(actions.getUsers));
 router.get('/createBaseProducts', verifyToken, utils_1.safe(actions.createBaseProducts));
+router.post('/logout', utils_1.safe(actions.logout));
 exports["default"] = router;
