@@ -22,9 +22,7 @@ const verifyToken = (req: Request, res: Response, next:NextFunction) =>
 {     
     const token = req.header('Authorization');
     if(!token) return res.status(400).json('ACCESS DENIED');
-    if (!actions.refreshTokens.includes(token)) {
-        return res.sendStatus(403);
-    }
+    if (!actions.refreshTokens.includes(token)) return res.status(403).json("INVALID TOKEN");    
     const decoded = jwt.verify(token as string, process.env.JWT_KEY as string)
     req.user = decoded;
     console.log(decoded);

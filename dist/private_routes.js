@@ -42,9 +42,8 @@ var verifyToken = function (req, res, next) {
     var token = req.header('Authorization');
     if (!token)
         return res.status(400).json('ACCESS DENIED');
-    if (!actions.refreshTokens.includes(token)) {
-        return res.sendStatus(403);
-    }
+    if (!actions.refreshTokens.includes(token))
+        return res.status(403).json("INVALID TOKEN");
     var decoded = jsonwebtoken_1["default"].verify(token, process.env.JWT_KEY);
     req.user = decoded;
     console.log(decoded);
