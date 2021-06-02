@@ -40,30 +40,70 @@ exports.getUsers = exports.createUser = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var utils_1 = require("./utils");
+// funcion para validar el formato del email
+var validateEmail = function (email) {
+    var res = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return res.test(email);
+};
+// funcion para validar el formato del password
+var validatePassword = function (pass) {
+    if (pass.length >= 8 && pass.length <= 20) {
+        var mayusc = false;
+        var minusc = false;
+        var num = false;
+        for (var i = 0; i < pass.length; i++) {
+            if (pass.charCodeAt(i) >= 65 && pass.charCodeAt(i) <= 90)
+                mayusc = true;
+            else if (pass.charCodeAt(i) >= 97 && pass.charCodeAt(i) <= 122)
+                minusc = true;
+            else if (pass.charCodeAt(i) >= 48 && pass.charCodeAt(i) <= 57)
+                num = true;
+        }
+        if (mayusc == true && minusc == true && num == true)
+            return true;
+    }
+    return false;
+};
 var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var userRepo, user, newUser, results;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
+    var _a, first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth, userRepo, user, newUser, results;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
             case 0:
-                // important validations to avoid ambiguos errors, the client needs to understand what went wrong
-                if (!req.body.first_name)
+                _a = req.body, first_name = _a.first_name, last_name = _a.last_name, email = _a.email, password = _a.password, address = _a.address, phone_1 = _a.phone_1, phone_2 = _a.phone_2, date_of_birth = _a.date_of_birth;
+                // validaciones de campos obligatorios
+                if (!first_name)
                     throw new utils_1.Exception("Please provide a first_name");
-                if (!req.body.last_name)
+                if (!last_name)
                     throw new utils_1.Exception("Please provide a last_name");
-                if (!req.body.email)
+                if (!email)
                     throw new utils_1.Exception("Please provide an email");
-                if (!req.body.password)
+                if (!password)
                     throw new utils_1.Exception("Please provide a password");
+                if (!address)
+                    throw new utils_1.Exception("Please provide a address");
+                if (!phone_1)
+                    throw new utils_1.Exception("Please provide a phone_1");
+                if (!phone_2)
+                    throw new utils_1.Exception("Please provide a phone_2");
+                if (!date_of_birth)
+                    throw new utils_1.Exception("Please provide a date_of_birth");
+                // validación del formato de password
+                console.log("largo: ", password.length);
+                if (!validatePassword(password))
+                    throw new utils_1.Exception("Please provide a valid password");
+                // validacion del formato de email
+                if (!validateEmail(email))
+                    throw new utils_1.Exception("Please provide a valid email address");
                 userRepo = typeorm_1.getRepository(User_1.User);
                 return [4 /*yield*/, userRepo.findOne({ where: { email: req.body.email } })];
             case 1:
-                user = _a.sent();
+                user = _b.sent();
                 if (user)
-                    throw new utils_1.Exception("Users already exists with this email");
-                newUser = typeorm_1.getRepository(User_1.User).create(req.body);
-                return [4 /*yield*/, typeorm_1.getRepository(User_1.User).save(newUser)];
+                    throw new utils_1.Exception("User already exists with this email");
+                newUser = userRepo.create(req.body);
+                return [4 /*yield*/, userRepo.save(newUser)];
             case 2:
-                results = _a.sent();
+                results = _b.sent();
                 return [2 /*return*/, res.json(results)];
         }
     });
