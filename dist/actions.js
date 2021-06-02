@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
+exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
@@ -280,3 +280,35 @@ var validatePassword = function (pass) {
     }
     return false;
 };
+var resetPassword = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userid, _a, oldPassword, newPassword, userRepo, user, r;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                userid = req.params.userid;
+                _a = req.body, oldPassword = _a.oldPassword, newPassword = _a.newPassword;
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!oldPassword)
+                    throw new utils_1.Exception("Please specify old password on your request body", 400);
+                if (!newPassword)
+                    throw new utils_1.Exception("Please specify new password on your request body", 400);
+                if (!validatePassword(newPassword))
+                    throw new utils_1.Exception("The password you entered doesn't meet password policy requirements", 400);
+                userRepo = typeorm_1.getRepository(User_1.User);
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 1:
+                user = _b.sent();
+                if (!user)
+                    throw new utils_1.Exception("Invalid user id", 401);
+                if (!user.checkIfUnencryptedPasswordIsValid(oldPassword))
+                    throw new utils_1.Exception("Invalid old password", 401);
+                r = {
+                    message: "All Products are created",
+                    state: true
+                };
+                return [2 /*return*/, res.json(r)];
+        }
+    });
+}); };
+exports.resetPassword = resetPassword;

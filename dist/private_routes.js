@@ -54,4 +54,5 @@ var router = express_1.Router();
 router.get('/user', verifyToken, utils_1.safe(actions.getUsers));
 router.get('/createBaseProducts', verifyToken, utils_1.safe(actions.createBaseProducts));
 router.post('/logout', utils_1.safe(actions.logout));
+router.put('/user/:userid/resetPassword', verifyToken, utils_1.safe(actions.resetPassword));
 exports["default"] = router;

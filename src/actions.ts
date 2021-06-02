@@ -162,3 +162,21 @@ const validatePassword = (pass:string) => {
     return false;
 }
 
+export const resetPassword = async (req: Request, res: Response): Promise<Response> => {
+
+   const {userid} = req.params;
+   const {oldPassword, newPassword} = req.body;
+   if (!userid) throw new Exception("Please specify a user id in url", 400)
+   if (!oldPassword) throw new Exception("Please specify old password on your request body", 400)
+   if (!newPassword) throw new Exception("Please specify new password on your request body", 400)      
+   if (!validatePassword(newPassword)) throw new Exception("The password you entered doesn't meet password policy requirements", 400)   
+   const userRepo = getRepository(User)
+   const user = await userRepo.findOne({where: { id:userid } })  
+   if (!user) throw new Exception("Invalid user id", 401)
+   if (!user.checkIfUnencryptedPasswordIsValid(oldPassword)) throw new Exception("Invalid old password", 401)
+   const r = {
+        message: "All Products are created",
+        state: true
+    }
+    return res.json(r);
+}
