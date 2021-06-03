@@ -163,7 +163,6 @@ const validatePassword = (pass: string) => {
 }
 
 export const resetPassword = async (req: Request, res: Response): Promise<Response> => {
-
     const { userid } = req.params;
     const { oldPassword, newPassword } = req.body;
     if (!userid) throw new Exception("Please specify a user id in url", 400)
@@ -174,11 +173,9 @@ export const resetPassword = async (req: Request, res: Response): Promise<Respon
     const user = await userRepo.findOne({ where: { id: userid } })
     if (!user) throw new Exception("Invalid user id", 401)
     if (!user.checkIfUnencryptedPasswordIsValid(oldPassword)) throw new Exception("Invalid old password", 401)
-
     const userPassword = new User();
     userPassword.password = newPassword;
     userPassword.hashPassword();    
-    const results = await userRepo.update(user, userPassword).then(() => {return res.json("passord updated!")});
-    
+    const results = await userRepo.update(user, userPassword).then(() => {return res.json("passord updated!")});    
     return res.json(results);
 }
