@@ -52,34 +52,34 @@ export const createUser = async (req: Request, res: Response): Promise<Response>
     return res.json(results);
 }
 
-export const getUsers = async (req: Request, res: Response): Promise<Response> =>{
-		const users = await getRepository(User).find({select:["id","first_name","last_name","email","address","phone_1","phone_2","date_of_birth"]});
-		return res.json(users);
+export const getUsers = async (req: Request, res: Response): Promise<Response> => {
+    const users = await getRepository(User).find({ select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth"] });
+    return res.json(users);
 }
 
-export const getProducts = async (req: Request, res: Response): Promise<Response> =>{
-    const products = await getRepository(Product).find({order: {points:'DESC'}});
-	return res.json(products);
+export const getProducts = async (req: Request, res: Response): Promise<Response> => {
+    const products = await getRepository(Product).find({ order: { points: 'DESC' } });
+    return res.json(products);
 }
 export const createBaseProducts = async (req: Request, res: Response): Promise<Response> => {
     const baseURL = "https://gist.githubusercontent.com/ajubin/d331f3251db4bd239c7a1efd0af54e38/raw/058e1ad07398fc62ab7f3fcc13ef1007a48d01d7/wine-data-set.json";
-    
-    const fetchProductsData = await fetch(baseURL,{
-          headers : { 
+
+    const fetchProductsData = await fetch(baseURL, {
+        headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
-           }
-         })
+        }
+    })
         .then(async res => {
             if (res.status >= 400) {
                 throw new Error("Bad response from server");
             }
-            const responseJson = await res.json();            
+            const responseJson = await res.json();
             return responseJson;
         })
         .then(async product => {
             product.map(async (item: any, index: any) => {
-                req.body.points = item.points 
+                req.body.points = item.points
                 req.body.title = item.title
                 req.body.description = item.description
                 req.body.taster_name = item.taster_name
@@ -91,7 +91,7 @@ export const createBaseProducts = async (req: Request, res: Response): Promise<R
                 req.body.region_2 = item.region_2
                 req.body.province = item.province
                 req.body.country = item.country
-                req.body.image = await image_finder.find(item.title, {size: "large"})               
+                req.body.image = await image_finder.find(item.title, { size: "large" })
                 req.body.winery = item.winery
                 const newProduct = getRepository(Product).create(req.body);  //Creo por cada iteración el producto
                 const results = await getRepository(Product).save(newProduct); //Grabo el nuevo personaje
@@ -114,26 +114,26 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
     if (!email) throw new Exception("Please specify an email on your request body", 400)
     if (!password) throw new Exception("Please specify a password on your request body", 400)
     if (!validateEmail(email)) throw new Exception("Please provide a valid email address", 400)
-    
+
     const userRepo = getRepository(User)
-    const user = await userRepo.findOne({ 
-        where: { email }        
-    })    
+    const user = await userRepo.findOne({
+        where: { email }
+    })
     if (!user) throw new Exception("Invalid email", 401)
     if (!user.checkIfUnencryptedPasswordIsValid(password)) throw new Exception("Invalid password", 401)
-    const token = jwt.sign({ user }, process.env.JWT_KEY as string, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN});                     
+    const token = jwt.sign({ user }, process.env.JWT_KEY as string, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN });
     refreshTokens.push(token);
-    return res.cookie('auth-token', token, {httpOnly: true, path:'/', domain: 'localhost'}).json({ token });
+    return res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ token });
 }
 
 export const buscarImg = async (req: Request, res: Response) => {
-    const {query} = req.body;
-    res.json(await image_finder.find(query, {size: "large"}));
+    const { query } = req.body;
+    res.json(await image_finder.find(query, { size: "large" }));
 }
-export const logout = async (req: Request, res: Response) => {    
+export const logout = async (req: Request, res: Response) => {
     const { token } = req.body;
     refreshTokens = refreshTokens.filter(t => t !== token);
-    res.status(202).clearCookie('auth-token').send('Success logged out')    
+    res.status(202).clearCookie('auth-token').send('Success logged out')
 }
 
 // funcion para validar el formato del email
@@ -143,14 +143,14 @@ const validateEmail = (email: string) => {
 }
 
 // funcion para validar el formato del password
-const validatePassword = (pass:string) => {
+const validatePassword = (pass: string) => {
     if (pass.length >= 8 && pass.length <= 20) {
         var mayusc = false
         var minusc = false
         var num = false
         for (var i = 0; i < pass.length; i++) {
-            if (pass.charCodeAt(i) >= 65 && pass.charCodeAt(i) <= 90) 
-              mayusc = true
+            if (pass.charCodeAt(i) >= 65 && pass.charCodeAt(i) <= 90)
+                mayusc = true
             else if (pass.charCodeAt(i) >= 97 && pass.charCodeAt(i) <= 122)
                 minusc = true
             else if (pass.charCodeAt(i) >= 48 && pass.charCodeAt(i) <= 57)
@@ -164,19 +164,21 @@ const validatePassword = (pass:string) => {
 
 export const resetPassword = async (req: Request, res: Response): Promise<Response> => {
 
-   const {userid} = req.params;
-   const {oldPassword, newPassword} = req.body;
-   if (!userid) throw new Exception("Please specify a user id in url", 400)
-   if (!oldPassword) throw new Exception("Please specify old password on your request body", 400)
-   if (!newPassword) throw new Exception("Please specify new password on your request body", 400)      
-   if (!validatePassword(newPassword)) throw new Exception("The password you entered doesn't meet password policy requirements", 400)   
-   const userRepo = getRepository(User)
-   const user = await userRepo.findOne({where: { id:userid } })  
-   if (!user) throw new Exception("Invalid user id", 401)
-   if (!user.checkIfUnencryptedPasswordIsValid(oldPassword)) throw new Exception("Invalid old password", 401)
-   const r = {
-        message: "All Products are created",
-        state: true
-    }
-    return res.json(r);
+    const { userid } = req.params;
+    const { oldPassword, newPassword } = req.body;
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
+    if (!oldPassword) throw new Exception("Please specify old password on your request body", 400)
+    if (!newPassword) throw new Exception("Please specify new password on your request body", 400)
+    if (!validatePassword(newPassword)) throw new Exception("The password you entered doesn't meet password policy requirements", 400)
+    const userRepo = getRepository(User)
+    const user = await userRepo.findOne({ where: { id: userid } })
+    if (!user) throw new Exception("Invalid user id", 401)
+    if (!user.checkIfUnencryptedPasswordIsValid(oldPassword)) throw new Exception("Invalid old password", 401)
+
+    const userPassword = new User();
+    userPassword.password = newPassword;
+    userPassword.hashPassword();    
+    const results = await userRepo.update(user, userPassword).then(() => {return res.json("passord updated!")});
+    
+    return res.json(results);
 }

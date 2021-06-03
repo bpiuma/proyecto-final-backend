@@ -281,7 +281,7 @@ var validatePassword = function (pass) {
     return false;
 };
 var resetPassword = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var userid, _a, oldPassword, newPassword, userRepo, user, r;
+    var userid, _a, oldPassword, newPassword, userRepo, user, userPassword, results;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -303,11 +303,13 @@ var resetPassword = function (req, res) { return __awaiter(void 0, void 0, void 
                     throw new utils_1.Exception("Invalid user id", 401);
                 if (!user.checkIfUnencryptedPasswordIsValid(oldPassword))
                     throw new utils_1.Exception("Invalid old password", 401);
-                r = {
-                    message: "All Products are created",
-                    state: true
-                };
-                return [2 /*return*/, res.json(r)];
+                userPassword = new User_1.User();
+                userPassword.password = newPassword;
+                userPassword.hashPassword();
+                return [4 /*yield*/, userRepo.update(user, userPassword).then(function () { return res.json("passord updated!"); })];
+            case 2:
+                results = _b.sent();
+                return [2 /*return*/, res.json(results)];
         }
     });
 }); };
