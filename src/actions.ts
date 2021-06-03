@@ -179,3 +179,48 @@ export const resetPassword = async (req: Request, res: Response): Promise<Respon
     const results = await userRepo.update(user, userPassword).then(() => {return res.json("passord updated!")});    
     return res.json(results);
 }
+
+export const updateUser = async (req: Request, res: Response): Promise<Response> => {
+
+    const { first_name, last_name, email, address, phone_1, phone_2, date_of_birth } = req.body
+
+    const userRepo = getRepository(User)
+    let user = await userRepo.findOne(req.params.id)
+
+    // verificamos que exista el usuario
+    if (!user) throw new Exception("There is no user with this id")
+
+    // verificamos la unicidad y el formato del email
+    if (email != user.email) {
+        const user2 = await userRepo.findOne({ where: { email: email } })
+        if (user2) throw new Exception("There is another user with this email")
+        if (!validateEmail(email)) throw new Exception("Please provide a valid email address")
+    }
+
+    user.first_name = first_name
+    user.last_name = last_name
+    user.email = email
+    user.address = address
+    user.phone_1 = phone_1
+    user.phone_2 = phone_2
+    user.date_of_birth = date_of_birth
+
+    const users = await userRepo.save(user)
+    return res.json(users)
+}
+
+export const getUserById = async (req: Request, res: Response): Promise<Response> => {
+    const user = await getRepository(User).findOne(req.params.id, { select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth"] })
+    // verificamos que exista el usuario
+    if (!user) throw new Exception("There is no user with this id")
+    return res.json(user)
+}
+
+export const deleteUser = async (req: Request, res: Response): Promise<Response> => {
+    const userRepo = getRepository(User)
+    let user = await userRepo.findOne(req.params.id)
+    // verificamos que exista el usuario
+    if (!user) throw new Exception("There is no user with this id")
+    await userRepo.delete(user)
+    return res.json({ "message": "User successfully removed" })
+}

@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
+exports.deleteUser = exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
@@ -314,3 +314,82 @@ var resetPassword = function (req, res) { return __awaiter(void 0, void 0, void 
     });
 }); };
 exports.resetPassword = resetPassword;
+var updateUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, first_name, last_name, email, address, phone_1, phone_2, date_of_birth, userRepo, user, user2, users;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.body, first_name = _a.first_name, last_name = _a.last_name, email = _a.email, address = _a.address, phone_1 = _a.phone_1, phone_2 = _a.phone_2, date_of_birth = _a.date_of_birth;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                return [4 /*yield*/, userRepo.findOne(req.params.id)
+                    // verificamos que exista el usuario
+                ];
+            case 1:
+                user = _b.sent();
+                // verificamos que exista el usuario
+                if (!user)
+                    throw new utils_1.Exception("There is no user with this id");
+                if (!(email != user.email)) return [3 /*break*/, 3];
+                return [4 /*yield*/, userRepo.findOne({ where: { email: email } })];
+            case 2:
+                user2 = _b.sent();
+                if (user2)
+                    throw new utils_1.Exception("There is another user with this email");
+                if (!validateEmail(email))
+                    throw new utils_1.Exception("Please provide a valid email address");
+                _b.label = 3;
+            case 3:
+                user.first_name = first_name;
+                user.last_name = last_name;
+                user.email = email;
+                user.address = address;
+                user.phone_1 = phone_1;
+                user.phone_2 = phone_2;
+                user.date_of_birth = date_of_birth;
+                return [4 /*yield*/, userRepo.save(user)];
+            case 4:
+                users = _b.sent();
+                return [2 /*return*/, res.json(users)];
+        }
+    });
+}); };
+exports.updateUser = updateUser;
+var getUserById = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var user;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(User_1.User).findOne(req.params.id, { select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth"] })
+                // verificamos que exista el usuario
+            ];
+            case 1:
+                user = _a.sent();
+                // verificamos que exista el usuario
+                if (!user)
+                    throw new utils_1.Exception("There is no user with this id");
+                return [2 /*return*/, res.json(user)];
+        }
+    });
+}); };
+exports.getUserById = getUserById;
+var deleteUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userRepo, user;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userRepo = typeorm_1.getRepository(User_1.User);
+                return [4 /*yield*/, userRepo.findOne(req.params.id)
+                    // verificamos que exista el usuario
+                ];
+            case 1:
+                user = _a.sent();
+                // verificamos que exista el usuario
+                if (!user)
+                    throw new utils_1.Exception("There is no user with this id");
+                return [4 /*yield*/, userRepo["delete"](user)];
+            case 2:
+                _a.sent();
+                return [2 /*return*/, res.json({ "message": "User successfully removed" })];
+        }
+    });
+}); };
+exports.deleteUser = deleteUser;
