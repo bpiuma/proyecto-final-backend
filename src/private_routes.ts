@@ -33,6 +33,7 @@ const verifyToken = (req: Request, res: Response, next:NextFunction) =>
 const router = Router();
 
 router.get('/user', verifyToken, safe(actions.getUsers));
-router.get('/createBaseProducts', verifyToken, safe(actions.createBaseProducts));
-router.post('/logout', safe(actions.logout));
+router.post('/createBaseProducts', verifyToken, safe(actions.createBaseProducts));
+router.delete('/logout',verifyToken, safe(actions.logout));
+router.put('/user/:userid/resetPassword', verifyToken,safe(actions.resetPassword));
 export default router;
