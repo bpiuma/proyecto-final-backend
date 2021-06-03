@@ -215,3 +215,12 @@ export const getUserById = async (req: Request, res: Response): Promise<Response
     if (!user) throw new Exception("There is no user with this id")
     return res.json(user)
 }
+
+export const deleteUser = async (req: Request, res: Response): Promise<Response> => {
+    const userRepo = getRepository(User)
+    let user = await userRepo.findOne(req.params.id)
+    // verificamos que exista el usuario
+    if (!user) throw new Exception("There is no user with this id")
+    await userRepo.delete(user)
+    return res.json({ "message": "User successfully removed" })
+}

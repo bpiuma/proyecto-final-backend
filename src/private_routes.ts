@@ -38,7 +38,7 @@ router.delete('/logout', safe(actions.logout));
 router.put('/user/:userid/resetPassword', safe(actions.resetPassword));
 router.put('/user/:id', safe(actions.updateUser));
 router.get('/user/:id', safe(actions.getUserById));
-
+router.delete('/user/:id', safe(actions.deleteUser));
 
 export default router;
 

@@ -57,6 +57,7 @@ router["delete"]('/logout', utils_1.safe(actions.logout));
 router.put('/user/:userid/resetPassword', utils_1.safe(actions.resetPassword));
 router.put('/user/:id', utils_1.safe(actions.updateUser));
 router.get('/user/:id', utils_1.safe(actions.getUserById));
+router["delete"]('/user/:id', utils_1.safe(actions.deleteUser));
 exports["default"] = router;
 // router.get('/user', verifyToken, safe(actions.getUsers));
 // router.post('/createBaseProducts', verifyToken, safe(actions.createBaseProducts));

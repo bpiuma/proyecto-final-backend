@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
+exports.deleteUser = exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
@@ -371,3 +371,25 @@ var getUserById = function (req, res) { return __awaiter(void 0, void 0, void 0,
     });
 }); };
 exports.getUserById = getUserById;
+var deleteUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userRepo, user;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userRepo = typeorm_1.getRepository(User_1.User);
+                return [4 /*yield*/, userRepo.findOne(req.params.id)
+                    // verificamos que exista el usuario
+                ];
+            case 1:
+                user = _a.sent();
+                // verificamos que exista el usuario
+                if (!user)
+                    throw new utils_1.Exception("There is no user with this id");
+                return [4 /*yield*/, userRepo["delete"](user)];
+            case 2:
+                _a.sent();
+                return [2 /*return*/, res.json({ "message": "User successfully removed" })];
+        }
+    });
+}); };
+exports.deleteUser = deleteUser;
