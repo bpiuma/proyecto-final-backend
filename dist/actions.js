@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.addProductToCart = exports.deleteUser = exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
+exports.passwordRecovery = exports.addProductToCart = exports.deleteUser = exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
@@ -47,6 +47,7 @@ var utils_1 = require("./utils");
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var cross_fetch_1 = __importDefault(require("cross-fetch"));
 var Cart_1 = require("./entities/Cart");
+var passRecovery_1 = require("./emailTemplates/passRecovery");
 var image_finder = require('image-search-engine');
 exports.refreshTokens = [];
 var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
@@ -452,3 +453,23 @@ var addProductToCart = function (req, res) { return __awaiter(void 0, void 0, vo
     });
 }); };
 exports.addProductToCart = addProductToCart;
+var passwordRecovery = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userRepo, user, token, userName;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userRepo = typeorm_1.getRepository(User_1.User);
+                return [4 /*yield*/, userRepo.findOne({ where: { email: req.body.email } })];
+            case 1:
+                user = _a.sent();
+                if (!user)
+                    throw new utils_1.Exception("Invalid email", 401);
+                token = jsonwebtoken_1["default"].sign({ user: user }, process.env.JWT_KEY, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN });
+                exports.refreshTokens.push(token);
+                userName = user.first_name + " " + user.last_name;
+                passRecovery_1.send_mail(userName, user.email, token);
+                return [2 /*return*/, res.json({ "message": "Email successfully sent" })];
+        }
+    });
+}); };
+exports.passwordRecovery = passwordRecovery;
