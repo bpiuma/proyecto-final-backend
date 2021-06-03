@@ -32,18 +32,13 @@ const verifyToken = (req: Request, res: Response, next:NextFunction) =>
 // declare a new router to include all the endpoints
 const router = Router();
 
-router.get('/user', safe(actions.getUsers));
-router.post('/createBaseProducts', safe(actions.createBaseProducts));
-router.delete('/logout', safe(actions.logout));
-router.put('/user/:userid/resetPassword', safe(actions.resetPassword));
-router.put('/user/:id', safe(actions.updateUser));
-router.get('/user/:id', safe(actions.getUserById));
-router.delete('/user/:id', safe(actions.deleteUser));
+router.get('/user', verifyToken, safe(actions.getUsers));
+router.post('/createBaseProducts', verifyToken, safe(actions.createBaseProducts));
+router.delete('/logout',verifyToken, safe(actions.logout));
+router.put('/user/:userid/resetPassword', verifyToken, safe(actions.resetPassword));
+router.put('/user/:id', verifyToken, safe(actions.updateUser));
+router.get('/user/:id', verifyToken, safe(actions.getUserById));
+router.delete('/user/:id', verifyToken, safe(actions.deleteUser));
 
 export default router;
 
-// router.get('/user', verifyToken, safe(actions.getUsers));
-// router.post('/createBaseProducts', verifyToken, safe(actions.createBaseProducts));
-// router.delete('/logout',verifyToken, safe(actions.logout));
-// router.put('/user/:userid/resetPassword', verifyToken,safe(actions.resetPassword));
-// router.put('/user/:id', safe(actions.updateUser));
