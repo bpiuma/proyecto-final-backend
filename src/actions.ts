@@ -53,7 +53,7 @@ export const createUser = async (req: Request, res: Response): Promise<Response>
 }
 
 export const getUsers = async (req: Request, res: Response): Promise<Response> => {
-    const users = await getRepository(User).find();
+    const users = await getRepository(User).find({ select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth"] });
     return res.json(users);
 }
 
@@ -207,4 +207,11 @@ export const updateUser = async (req: Request, res: Response): Promise<Response>
 
     const users = await userRepo.save(user)
     return res.json(users)
+}
+
+export const getUserById = async (req: Request, res: Response): Promise<Response> => {
+    const user = await getRepository(User).findOne(req.params.id, { select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth"] })
+    // verificamos que exista el usuario
+    if (!user) throw new Exception("There is no user with this id")
+    return res.json(user)
 }

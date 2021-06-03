@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
+exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
@@ -107,7 +107,7 @@ var getUsers = function (req, res) { return __awaiter(void 0, void 0, void 0, fu
     var users;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, typeorm_1.getRepository(User_1.User).find()];
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(User_1.User).find({ select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth"] })];
             case 1:
                 users = _a.sent();
                 return [2 /*return*/, res.json(users)];
@@ -354,3 +354,20 @@ var updateUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
     });
 }); };
 exports.updateUser = updateUser;
+var getUserById = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var user;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(User_1.User).findOne(req.params.id, { select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth"] })
+                // verificamos que exista el usuario
+            ];
+            case 1:
+                user = _a.sent();
+                // verificamos que exista el usuario
+                if (!user)
+                    throw new utils_1.Exception("There is no user with this id");
+                return [2 /*return*/, res.json(user)];
+        }
+    });
+}); };
+exports.getUserById = getUserById;

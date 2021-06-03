@@ -37,6 +37,9 @@ router.post('/createBaseProducts', safe(actions.createBaseProducts));
 router.delete('/logout', safe(actions.logout));
 router.put('/user/:userid/resetPassword', safe(actions.resetPassword));
 router.put('/user/:id', safe(actions.updateUser));
+router.get('/user/:id', safe(actions.getUserById));
+
+
 export default router;
 
 // router.get('/user', verifyToken, safe(actions.getUsers));
@@ -44,4 +47,3 @@ export default router;
 // router.delete('/logout',verifyToken, safe(actions.logout));
 // router.put('/user/:userid/resetPassword', verifyToken,safe(actions.resetPassword));
 // router.put('/user/:id', safe(actions.updateUser));
-// export default router;
