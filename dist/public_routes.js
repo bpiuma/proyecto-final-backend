@@ -16,4 +16,5 @@ router.post('/user', utils_1.safe(actions_1.createUser));
 router.post('/login', utils_1.safe(actions_1.login));
 router.get('/products', utils_1.safe(actions_1.getProducts));
 router.post('/getImage', utils_1.safe(actions_1.buscarImg));
+router.post('/passwordRecovery', utils_1.safe(actions_1.passwordRecovery));
 exports["default"] = router;
