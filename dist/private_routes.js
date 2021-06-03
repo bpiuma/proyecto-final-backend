@@ -51,8 +51,15 @@ var verifyToken = function (req, res, next) {
 };
 // declare a new router to include all the endpoints
 var router = express_1.Router();
-router.get('/user', verifyToken, utils_1.safe(actions.getUsers));
-router.get('/createBaseProducts', verifyToken, utils_1.safe(actions.createBaseProducts));
-router.post('/logout', utils_1.safe(actions.logout));
-router.put('/user/:userid/resetPassword', verifyToken, utils_1.safe(actions.resetPassword));
+router.get('/user', utils_1.safe(actions.getUsers));
+router.post('/createBaseProducts', utils_1.safe(actions.createBaseProducts));
+router["delete"]('/logout', utils_1.safe(actions.logout));
+router.put('/user/:userid/resetPassword', utils_1.safe(actions.resetPassword));
+router.put('/user/:id', utils_1.safe(actions.updateUser));
 exports["default"] = router;
+// router.get('/user', verifyToken, safe(actions.getUsers));
+// router.post('/createBaseProducts', verifyToken, safe(actions.createBaseProducts));
+// router.delete('/logout',verifyToken, safe(actions.logout));
+// router.put('/user/:userid/resetPassword', verifyToken,safe(actions.resetPassword));
+// router.put('/user/:id', safe(actions.updateUser));
+// export default router;
