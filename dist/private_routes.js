@@ -58,4 +58,5 @@ router.put('/user/:userid/resetPassword', verifyToken, utils_1.safe(actions.rese
 router.put('/user/:id', verifyToken, utils_1.safe(actions.updateUser));
 router.get('/user/:id', verifyToken, utils_1.safe(actions.getUserById));
 router["delete"]('/user/:id', verifyToken, utils_1.safe(actions.deleteUser));
+router.post('/cart/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.addProductToCart));
 exports["default"] = router;

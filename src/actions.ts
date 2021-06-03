@@ -6,6 +6,8 @@ import { Exception } from './utils'
 import jwt from 'jsonwebtoken'
 import fetch from 'cross-fetch'
 import extend from 'extend'
+import { Cart } from './entities/Cart'
+import { UserFavoriteProduct } from './entities/UserFavoriteProduct'
 
 const image_finder = require('image-search-engine')
 
@@ -223,4 +225,45 @@ export const deleteUser = async (req: Request, res: Response): Promise<Response>
     if (!user) throw new Exception("There is no user with this id")
     await userRepo.delete(user)
     return res.json({ "message": "User successfully removed" })
+}
+
+export const addProductToCart = async (req: Request, res: Response): Promise<Response> => {
+    const { userid, productid } = req.params
+    let { cant } = req.body
+    const userRepo = getRepository(User)
+    const productRepo = getRepository(Product)
+    const cartRepo = getRepository(Cart)
+    const product = await productRepo.findOne({ where: { id: productid } })
+    const user = await userRepo.findOne({where:{id: userid}})
+
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
+    if (!productid) throw new Exception("Please specify a product id in url", 400)
+    if (!cant) throw new Exception("Please specify a cantity for product in body", 400)
+
+    if (!product) throw new Exception("Product not exist!")
+    if (!user) throw new Exception("User not found")
+
+    const userCartProduct = await cartRepo.findOne({
+        relations: ['user','product'],
+        where: {
+            product: product, 
+            user: user
+        }
+    })    
+    if(userCartProduct){
+        cant = userCartProduct.cant + cant
+        const results = await getRepository(Cart).save(userCartProduct, cant).then(()=>{
+           return res.json("Cant updated!") 
+        })
+    }
+
+    const oneProductToCart = new Cart()
+    oneProductToCart.user = user
+    oneProductToCart.product = product
+    oneProductToCart.cant = cant
+    oneProductToCart.amount = product.price
+    const newProductToCart = getRepository(Cart).create(oneProductToCart)
+    const results = await getRepository(Cart).save(newProductToCart); //Grabo el nuevo personaje
+           
+    return res.json({ "message": "Product added successfully to cart" })
 }
