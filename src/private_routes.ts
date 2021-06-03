@@ -39,6 +39,6 @@ router.put('/user/:userid/resetPassword', verifyToken, safe(actions.resetPasswor
 router.put('/user/:id', verifyToken, safe(actions.updateUser));
 router.get('/user/:id', verifyToken, safe(actions.getUserById));
 router.delete('/user/:id', verifyToken, safe(actions.deleteUser));
-
+router.post('/cart/user/:userid/product/:productid',verifyToken,safe(actions.addProductToCart));
 export default router;
 

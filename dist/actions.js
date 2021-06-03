@@ -39,13 +39,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.deleteUser = exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
+exports.addProductToCart = exports.deleteUser = exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
 var utils_1 = require("./utils");
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var cross_fetch_1 = __importDefault(require("cross-fetch"));
+var Cart_1 = require("./entities/Cart");
 var image_finder = require('image-search-engine');
 exports.refreshTokens = [];
 var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
@@ -393,3 +394,61 @@ var deleteUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
     });
 }); };
 exports.deleteUser = deleteUser;
+var addProductToCart = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, userid, productid, cant, userRepo, productRepo, cartRepo, product, user, userCartProduct, results_1, oneProductToCart, newProductToCart, results;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.params, userid = _a.userid, productid = _a.productid;
+                cant = req.body.cant;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                productRepo = typeorm_1.getRepository(Product_1.Product);
+                cartRepo = typeorm_1.getRepository(Cart_1.Cart);
+                return [4 /*yield*/, productRepo.findOne({ where: { id: productid } })];
+            case 1:
+                product = _b.sent();
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 2:
+                user = _b.sent();
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!productid)
+                    throw new utils_1.Exception("Please specify a product id in url", 400);
+                if (!cant)
+                    throw new utils_1.Exception("Please specify a cantity for product in body", 400);
+                if (!product)
+                    throw new utils_1.Exception("Product not exist!");
+                if (!user)
+                    throw new utils_1.Exception("User not found");
+                return [4 /*yield*/, cartRepo.findOne({
+                        relations: ['user', 'product'],
+                        where: {
+                            product: product,
+                            user: user
+                        }
+                    })];
+            case 3:
+                userCartProduct = _b.sent();
+                if (!userCartProduct) return [3 /*break*/, 5];
+                cant = userCartProduct.cant + cant;
+                return [4 /*yield*/, typeorm_1.getRepository(Cart_1.Cart).save(userCartProduct, cant).then(function () {
+                        return res.json("Cant updated!");
+                    })];
+            case 4:
+                results_1 = _b.sent();
+                _b.label = 5;
+            case 5:
+                oneProductToCart = new Cart_1.Cart();
+                oneProductToCart.user = user;
+                oneProductToCart.product = product;
+                oneProductToCart.cant = cant;
+                oneProductToCart.amount = product.price;
+                newProductToCart = typeorm_1.getRepository(Cart_1.Cart).create(oneProductToCart);
+                return [4 /*yield*/, typeorm_1.getRepository(Cart_1.Cart).save(newProductToCart)];
+            case 6:
+                results = _b.sent();
+                return [2 /*return*/, res.json({ "message": "Product added successfully to cart" })];
+        }
+    });
+}); };
+exports.addProductToCart = addProductToCart;
