@@ -229,7 +229,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<Response>
 
 export const addProductToCart = async (req: Request, res: Response): Promise<Response> => {
     const { userid, productid } = req.params
-    let { cant } = req.body
+    const { cant } = req.body
     const userRepo = getRepository(User)
     const productRepo = getRepository(Product)
     const cartRepo = getRepository(Cart)
@@ -249,21 +249,24 @@ export const addProductToCart = async (req: Request, res: Response): Promise<Res
             product: product, 
             user: user
         }
-    })    
-    if(userCartProduct){
-        cant = userCartProduct.cant + cant
-        const results = await getRepository(Cart).save(userCartProduct, cant).then(()=>{
-           return res.json("Cant updated!") 
+    })   
+    if(userCartProduct){   
+        userCartProduct.amount = ( product.price * cant) + userCartProduct.amount 
+        userCartProduct.cant = (userCartProduct.cant + cant)
+        await cartRepo.save(userCartProduct).then(()=>{
+           return res.json({ "message": "Product Cantity/Amount successfully updated!" }) 
         })
+        return res.json(userCartProduct)
     }
 
     const oneProductToCart = new Cart()
     oneProductToCart.user = user
     oneProductToCart.product = product
     oneProductToCart.cant = cant
-    oneProductToCart.amount = product.price
+    oneProductToCart.amount = (product.price * cant)
     const newProductToCart = getRepository(Cart).create(oneProductToCart)
-    const results = await getRepository(Cart).save(newProductToCart); //Grabo el nuevo personaje
-           
-    return res.json({ "message": "Product added successfully to cart" })
+    const results = await getRepository(Cart).save(newProductToCart).then(()=>{
+        return res.json({ "message": "Product added successfully to cart" })
+    })
+    return res.json({"message":"Cart not updated"})
 }

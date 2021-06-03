@@ -395,7 +395,7 @@ var deleteUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
 }); };
 exports.deleteUser = deleteUser;
 var addProductToCart = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, userid, productid, cant, userRepo, productRepo, cartRepo, product, user, userCartProduct, results_1, oneProductToCart, newProductToCart, results;
+    var _a, userid, productid, cant, userRepo, productRepo, cartRepo, product, user, userCartProduct, oneProductToCart, newProductToCart, results;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -430,24 +430,27 @@ var addProductToCart = function (req, res) { return __awaiter(void 0, void 0, vo
             case 3:
                 userCartProduct = _b.sent();
                 if (!userCartProduct) return [3 /*break*/, 5];
-                cant = userCartProduct.cant + cant;
-                return [4 /*yield*/, typeorm_1.getRepository(Cart_1.Cart).save(userCartProduct, cant).then(function () {
-                        return res.json("Cant updated!");
+                userCartProduct.amount = (product.price * cant) + userCartProduct.amount;
+                userCartProduct.cant = (userCartProduct.cant + cant);
+                return [4 /*yield*/, cartRepo.save(userCartProduct).then(function () {
+                        return res.json({ "message": "Product Cantity/Amount successfully updated!" });
                     })];
             case 4:
-                results_1 = _b.sent();
-                _b.label = 5;
+                _b.sent();
+                return [2 /*return*/, res.json(userCartProduct)];
             case 5:
                 oneProductToCart = new Cart_1.Cart();
                 oneProductToCart.user = user;
                 oneProductToCart.product = product;
                 oneProductToCart.cant = cant;
-                oneProductToCart.amount = product.price;
+                oneProductToCart.amount = (product.price * cant);
                 newProductToCart = typeorm_1.getRepository(Cart_1.Cart).create(oneProductToCart);
-                return [4 /*yield*/, typeorm_1.getRepository(Cart_1.Cart).save(newProductToCart)];
+                return [4 /*yield*/, typeorm_1.getRepository(Cart_1.Cart).save(newProductToCart).then(function () {
+                        return res.json({ "message": "Product added successfully to cart" });
+                    })];
             case 6:
                 results = _b.sent();
-                return [2 /*return*/, res.json({ "message": "Product added successfully to cart" })];
+                return [2 /*return*/, res.json({ "message": "Cart not updated" })];
         }
     });
 }); };
