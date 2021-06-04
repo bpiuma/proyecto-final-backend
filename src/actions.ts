@@ -178,8 +178,8 @@ export const resetPassword = async (req: Request, res: Response): Promise<Respon
     if (!user.checkIfUnencryptedPasswordIsValid(oldPassword)) throw new Exception("Invalid old password", 401)
     const userPassword = new User();
     userPassword.password = newPassword;
-    userPassword.hashPassword();    
-    const results = await userRepo.update(user, userPassword).then(() => {return res.json("passord updated!")});    
+    userPassword.hashPassword();
+    const results = await userRepo.update(user, userPassword).then(() => { return res.json("passord updated!") });
     return res.json(results);
 }
 
@@ -230,12 +230,12 @@ export const deleteUser = async (req: Request, res: Response): Promise<Response>
 
 export const addProductToCart = async (req: Request, res: Response): Promise<Response> => {
     const { userid, productid } = req.params
-    let { cant } = req.body
+    const { cant } = req.body
     const userRepo = getRepository(User)
     const productRepo = getRepository(Product)
     const cartRepo = getRepository(Cart)
     const product = await productRepo.findOne({ where: { id: productid } })
-    const user = await userRepo.findOne({where:{id: userid}})
+    const user = await userRepo.findOne({ where: { id: userid } })
 
     if (!userid) throw new Exception("Please specify a user id in url", 400)
     if (!productid) throw new Exception("Please specify a product id in url", 400)
@@ -245,28 +245,123 @@ export const addProductToCart = async (req: Request, res: Response): Promise<Res
     if (!user) throw new Exception("User not found")
 
     const userCartProduct = await cartRepo.findOne({
-        relations: ['user','product'],
+        relations: ['user', 'product'],
         where: {
-            product: product, 
+            product: product,
             user: user
         }
-    })    
-    if(userCartProduct){
-        cant = userCartProduct.cant + cant
-        const results = await getRepository(Cart).save(userCartProduct, cant).then(()=>{
-           return res.json("Cant updated!") 
+    })
+    if (userCartProduct) {
+        userCartProduct.amount = (product.price * cant) + userCartProduct.amount
+        userCartProduct.cant = (userCartProduct.cant + cant)
+        await cartRepo.save(userCartProduct).then(() => {
+            return res.json({ "message": "Product Cantity/Amount successfully updated!" })
+        })
+    } else {
+
+        const oneProductToCart = new Cart()
+        oneProductToCart.user = user
+        oneProductToCart.product = product
+        oneProductToCart.cant = cant
+        oneProductToCart.amount = (product.price * cant)
+        const newProductToCart = getRepository(Cart).create(oneProductToCart)
+        const results = await getRepository(Cart).save(newProductToCart).then(() => {
+            return res.json({ "message": "Product added successfully to cart" })
         })
     }
+    return res.json({ "message": "Cart not updated" })
+}
 
-    const oneProductToCart = new Cart()
-    oneProductToCart.user = user
-    oneProductToCart.product = product
-    oneProductToCart.cant = cant
-    oneProductToCart.amount = product.price
-    const newProductToCart = getRepository(Cart).create(oneProductToCart)
-    const results = await getRepository(Cart).save(newProductToCart); //Grabo el nuevo personaje
-           
-    return res.json({ "message": "Product added successfully to cart" })
+export const subProductToCart = async (req: Request, res: Response): Promise<Response> => {
+    const { userid, productid } = req.params
+    const { cant } = req.body
+    const userRepo = getRepository(User)
+    const productRepo = getRepository(Product)
+    const cartRepo = getRepository(Cart)
+    const product = await productRepo.findOne({ where: { id: productid } })
+    const user = await userRepo.findOne({ where: { id: userid } })
+
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
+    if (!productid) throw new Exception("Please specify a product id in url", 400)
+    if (!cant) throw new Exception("Please specify a cantity for product in body", 400)
+
+    if (!product) throw new Exception("Product not exist!")
+    if (!user) throw new Exception("User not found")
+
+    const userCartProduct = await cartRepo.findOne({
+        relations: ['user', 'product'],
+        where: {
+            product: product,
+            user: user
+        }
+    })
+    if (userCartProduct) {
+        userCartProduct.amount = (product.price * cant) - userCartProduct.amount
+        userCartProduct.cant = (userCartProduct.cant - cant)
+        if(userCartProduct.cant >0){
+            await cartRepo.save(userCartProduct).then(() => {
+                return res.json({ "message": "Product Cantity/Amount successfully updated!" })
+            })
+        }else{
+            await cartRepo.remove(userCartProduct).then(() => {
+                return res.json({ "message": "Product successfully delete from cart!"})
+            })
+        }
+    }else return res.json({ "message": "User/Product not exist in cart!" })
+
+    return res.json({ "message": "Cart not updated" })
+}
+
+export const delProductToCart = async (req: Request, res: Response): Promise<Response> => {
+    const { userid, productid } = req.params
+
+    const userRepo = getRepository(User)
+    const productRepo = getRepository(Product)
+    const cartRepo = getRepository(Cart)
+    const product = await productRepo.findOne({ where: { id: productid } })
+    const user = await userRepo.findOne({ where: { id: userid } })
+
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
+    if (!productid) throw new Exception("Please specify a product id in url", 400)
+
+
+    if (!product) throw new Exception("Product not exist!")
+    if (!user) throw new Exception("User not found")
+
+    const userCartProduct = await cartRepo.findOne({
+        relations: ['user', 'product'],
+        where: {
+            product: product,
+            user: user
+        }
+    })
+
+    if (userCartProduct) {
+        await cartRepo.delete(userCartProduct).then(() => {
+            return res.json({ "message": "Product successfully delete from cart!"})
+        })
+    } else return res.json({ "message": "User/Product not exist in cart!" })
+
+    return res.json({ "message": "Cart not updated" })
+}
+
+export const getCart = async (req: Request, res: Response): Promise<Response> => {
+    const { userid } = req.params    
+    const userRepo = getRepository(User)    
+    const cartRepo = getRepository(Cart)    
+    const user = await userRepo.findOne({ where: { id: userid } })
+    if (!userid) throw new Exception("Please specify a user id in url", 400)    
+    if (!user) throw new Exception("User not found")
+    const userCartProduct = await cartRepo.findOne({
+        relations: ['user', 'product'],
+        where: {            
+            user: user
+        }
+    })
+    if (userCartProduct) {
+        return res.json(userCartProduct)
+    }
+    return res.json({ "message": "Cart not updated" })
 }
 
 export const passwordRecovery = async (req: Request, res: Response): Promise<Response> => {
