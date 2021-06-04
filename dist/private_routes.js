@@ -58,5 +58,8 @@ router.put('/user/:userid/resetPassword', verifyToken, utils_1.safe(actions.rese
 router.put('/user/:id', verifyToken, utils_1.safe(actions.updateUser));
 router.get('/user/:id', verifyToken, utils_1.safe(actions.getUserById));
 router["delete"]('/user/:id', verifyToken, utils_1.safe(actions.deleteUser));
-router.post('/cart/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.addProductToCart));
+router.post('/cart/add/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.addProductToCart));
+router.post('/cart/substract/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.subProductToCart));
+router["delete"]('/cart/delete/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.delProductToCart));
+router.get('/cart/user/:userid', verifyToken, utils_1.safe(actions.getCart));
 exports["default"] = router;

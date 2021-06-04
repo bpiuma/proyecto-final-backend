@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.addProductToCart = exports.deleteUser = exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
+exports.getCart = exports.delProductToCart = exports.subProductToCart = exports.addProductToCart = exports.deleteUser = exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
@@ -437,7 +437,7 @@ var addProductToCart = function (req, res) { return __awaiter(void 0, void 0, vo
                     })];
             case 4:
                 _b.sent();
-                return [2 /*return*/, res.json(userCartProduct)];
+                return [3 /*break*/, 7];
             case 5:
                 oneProductToCart = new Cart_1.Cart();
                 oneProductToCart.user = user;
@@ -450,8 +450,143 @@ var addProductToCart = function (req, res) { return __awaiter(void 0, void 0, vo
                     })];
             case 6:
                 results = _b.sent();
-                return [2 /*return*/, res.json({ "message": "Cart not updated" })];
+                _b.label = 7;
+            case 7: return [2 /*return*/, res.json({ "message": "Cart not updated" })];
         }
     });
 }); };
 exports.addProductToCart = addProductToCart;
+var subProductToCart = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, userid, productid, cant, userRepo, productRepo, cartRepo, product, user, userCartProduct;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.params, userid = _a.userid, productid = _a.productid;
+                cant = req.body.cant;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                productRepo = typeorm_1.getRepository(Product_1.Product);
+                cartRepo = typeorm_1.getRepository(Cart_1.Cart);
+                return [4 /*yield*/, productRepo.findOne({ where: { id: productid } })];
+            case 1:
+                product = _b.sent();
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 2:
+                user = _b.sent();
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!productid)
+                    throw new utils_1.Exception("Please specify a product id in url", 400);
+                if (!cant)
+                    throw new utils_1.Exception("Please specify a cantity for product in body", 400);
+                if (!product)
+                    throw new utils_1.Exception("Product not exist!");
+                if (!user)
+                    throw new utils_1.Exception("User not found");
+                return [4 /*yield*/, cartRepo.findOne({
+                        relations: ['user', 'product'],
+                        where: {
+                            product: product,
+                            user: user
+                        }
+                    })];
+            case 3:
+                userCartProduct = _b.sent();
+                if (!userCartProduct) return [3 /*break*/, 8];
+                userCartProduct.amount = (product.price * cant) - userCartProduct.amount;
+                userCartProduct.cant = (userCartProduct.cant - cant);
+                if (!(userCartProduct.cant > 0)) return [3 /*break*/, 5];
+                return [4 /*yield*/, cartRepo.save(userCartProduct).then(function () {
+                        return res.json({ "message": "Product Cantity/Amount successfully updated!" });
+                    })];
+            case 4:
+                _b.sent();
+                return [3 /*break*/, 7];
+            case 5: return [4 /*yield*/, cartRepo.remove(userCartProduct).then(function () {
+                    return res.json({ "message": "Product successfully delete from cart!" });
+                })];
+            case 6:
+                _b.sent();
+                _b.label = 7;
+            case 7: return [3 /*break*/, 9];
+            case 8: return [2 /*return*/, res.json({ "message": "User/Product not exist in cart!" })];
+            case 9: return [2 /*return*/, res.json({ "message": "Cart not updated" })];
+        }
+    });
+}); };
+exports.subProductToCart = subProductToCart;
+var delProductToCart = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, userid, productid, userRepo, productRepo, cartRepo, product, user, userCartProduct;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.params, userid = _a.userid, productid = _a.productid;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                productRepo = typeorm_1.getRepository(Product_1.Product);
+                cartRepo = typeorm_1.getRepository(Cart_1.Cart);
+                return [4 /*yield*/, productRepo.findOne({ where: { id: productid } })];
+            case 1:
+                product = _b.sent();
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 2:
+                user = _b.sent();
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!productid)
+                    throw new utils_1.Exception("Please specify a product id in url", 400);
+                if (!product)
+                    throw new utils_1.Exception("Product not exist!");
+                if (!user)
+                    throw new utils_1.Exception("User not found");
+                return [4 /*yield*/, cartRepo.findOne({
+                        relations: ['user', 'product'],
+                        where: {
+                            product: product,
+                            user: user
+                        }
+                    })];
+            case 3:
+                userCartProduct = _b.sent();
+                if (!userCartProduct) return [3 /*break*/, 5];
+                return [4 /*yield*/, cartRepo["delete"](userCartProduct).then(function () {
+                        return res.json({ "message": "Product successfully delete from cart!" });
+                    })];
+            case 4:
+                _b.sent();
+                return [3 /*break*/, 6];
+            case 5: return [2 /*return*/, res.json({ "message": "User/Product not exist in cart!" })];
+            case 6: return [2 /*return*/, res.json({ "message": "Cart not updated" })];
+        }
+    });
+}); };
+exports.delProductToCart = delProductToCart;
+var getCart = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userid, userRepo, cartRepo, user, userCartProduct;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userid = req.params.userid;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                cartRepo = typeorm_1.getRepository(Cart_1.Cart);
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 1:
+                user = _a.sent();
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!user)
+                    throw new utils_1.Exception("User not found");
+                return [4 /*yield*/, cartRepo.findOne({
+                        relations: ['user', 'product'],
+                        where: {
+                            user: user
+                        }
+                    })];
+            case 2:
+                userCartProduct = _a.sent();
+                if (userCartProduct) {
+                    return [2 /*return*/, res.json(userCartProduct)];
+                }
+                return [2 /*return*/, res.json({ "message": "Cart not updated" })];
+        }
+    });
+}); };
+exports.getCart = getCart;
