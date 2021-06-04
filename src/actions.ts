@@ -8,6 +8,7 @@ import fetch from 'cross-fetch'
 import extend from 'extend'
 import { Cart } from './entities/Cart'
 import { UserFavoriteProduct } from './entities/UserFavoriteProduct'
+import { send_mail } from './emailTemplates/passRecovery'
 
 const image_finder = require('image-search-engine')
 
@@ -361,4 +362,17 @@ export const getCart = async (req: Request, res: Response): Promise<Response> =>
         return res.json(userCartProduct)
     }
     return res.json({ "message": "Cart not updated" })
+}
+
+export const passwordRecovery = async (req: Request, res: Response): Promise<Response> => {
+
+    const userRepo = getRepository(User)
+    const user = await userRepo.findOne({ where: { email: req.body.email } })
+    if (!user) throw new Exception("Invalid email", 401)
+
+    const token = jwt.sign({ user }, process.env.JWT_KEY as string, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN });
+    refreshTokens.push(token);
+    const userName = user.first_name + " " + user.last_name
+    send_mail (userName, user.email, token)
+    return res.json({ "message": "Email successfully sent" })
 }
