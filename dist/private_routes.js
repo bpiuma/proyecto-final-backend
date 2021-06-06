@@ -62,4 +62,7 @@ router.post('/cart/add/user/:userid/product/:productid', verifyToken, utils_1.sa
 router.post('/cart/substract/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.subProductToCart));
 router["delete"]('/cart/delete/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.delProductToCart));
 router.get('/cart/user/:userid', verifyToken, utils_1.safe(actions.getCart));
+router.post('/favorite/add/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.addProductToFavorite));
+router.get('/favorite/user/:userid', verifyToken, utils_1.safe(actions.getFavorites));
+router["delete"]('/favorite/delete/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.delProductToFavorite));
 exports["default"] = router;

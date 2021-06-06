@@ -43,5 +43,8 @@ router.post('/cart/add/user/:userid/product/:productid',verifyToken,safe(actions
 router.post('/cart/substract/user/:userid/product/:productid',verifyToken,safe(actions.subProductToCart));
 router.delete('/cart/delete/user/:userid/product/:productid',verifyToken,safe(actions.delProductToCart));
 router.get('/cart/user/:userid',verifyToken,safe(actions.getCart));
+router.post('/favorite/add/user/:userid/product/:productid',verifyToken,safe(actions.addProductToFavorite));
+router.get('/favorite/user/:userid',verifyToken,safe(actions.getFavorites));
+router.delete('/favorite/delete/user/:userid/product/:productid',verifyToken,safe(actions.delProductToFavorite));
 export default router;
 

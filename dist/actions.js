@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-
+exports.delProductToFavorite = exports.getFavorites = exports.addProductToFavorite = exports.passwordRecovery = exports.getCart = exports.delProductToCart = exports.subProductToCart = exports.addProductToCart = exports.deleteUser = exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
@@ -47,6 +47,7 @@ var utils_1 = require("./utils");
 var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 var cross_fetch_1 = __importDefault(require("cross-fetch"));
 var Cart_1 = require("./entities/Cart");
+var UserFavoriteProduct_1 = require("./entities/UserFavoriteProduct");
 var passRecovery_1 = require("./emailTemplates/passRecovery");
 var image_finder = require('image-search-engine');
 exports.refreshTokens = [];
@@ -457,3 +458,284 @@ var addProductToCart = function (req, res) { return __awaiter(void 0, void 0, vo
     });
 }); };
 exports.addProductToCart = addProductToCart;
+var subProductToCart = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, userid, productid, cant, userRepo, productRepo, cartRepo, product, user, userCartProduct;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.params, userid = _a.userid, productid = _a.productid;
+                cant = req.body.cant;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                productRepo = typeorm_1.getRepository(Product_1.Product);
+                cartRepo = typeorm_1.getRepository(Cart_1.Cart);
+                return [4 /*yield*/, productRepo.findOne({ where: { id: productid } })];
+            case 1:
+                product = _b.sent();
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 2:
+                user = _b.sent();
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!productid)
+                    throw new utils_1.Exception("Please specify a product id in url", 400);
+                if (!cant)
+                    throw new utils_1.Exception("Please specify a cantity for product in body", 400);
+                if (!product)
+                    throw new utils_1.Exception("Product not exist!");
+                if (!user)
+                    throw new utils_1.Exception("User not found");
+                return [4 /*yield*/, cartRepo.findOne({
+                        relations: ['user', 'product'],
+                        where: {
+                            product: product,
+                            user: user
+                        }
+                    })];
+            case 3:
+                userCartProduct = _b.sent();
+                if (!userCartProduct) return [3 /*break*/, 8];
+                userCartProduct.amount = (product.price * cant) - userCartProduct.amount;
+                userCartProduct.cant = (userCartProduct.cant - cant);
+                if (!(userCartProduct.cant > 0)) return [3 /*break*/, 5];
+                return [4 /*yield*/, cartRepo.save(userCartProduct).then(function () {
+                        return res.json({ "message": "Product Cantity/Amount successfully updated!" });
+                    })];
+            case 4:
+                _b.sent();
+                return [3 /*break*/, 7];
+            case 5: return [4 /*yield*/, cartRepo.remove(userCartProduct).then(function () {
+                    return res.json({ "message": "Product successfully delete from cart!" });
+                })];
+            case 6:
+                _b.sent();
+                _b.label = 7;
+            case 7: return [3 /*break*/, 9];
+            case 8: return [2 /*return*/, res.json({ "message": "User/Product not exist in cart!" })];
+            case 9: return [2 /*return*/, res.json({ "message": "Cart not updated" })];
+        }
+    });
+}); };
+exports.subProductToCart = subProductToCart;
+var delProductToCart = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, userid, productid, userRepo, productRepo, cartRepo, product, user, userCartProduct;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.params, userid = _a.userid, productid = _a.productid;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                productRepo = typeorm_1.getRepository(Product_1.Product);
+                cartRepo = typeorm_1.getRepository(Cart_1.Cart);
+                return [4 /*yield*/, productRepo.findOne({ where: { id: productid } })];
+            case 1:
+                product = _b.sent();
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 2:
+                user = _b.sent();
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!productid)
+                    throw new utils_1.Exception("Please specify a product id in url", 400);
+                if (!product)
+                    throw new utils_1.Exception("Product not exist!");
+                if (!user)
+                    throw new utils_1.Exception("User not found");
+                return [4 /*yield*/, cartRepo.findOne({
+                        relations: ['user', 'product'],
+                        where: {
+                            product: product,
+                            user: user
+                        }
+                    })];
+            case 3:
+                userCartProduct = _b.sent();
+                if (!userCartProduct) return [3 /*break*/, 5];
+                return [4 /*yield*/, cartRepo["delete"](userCartProduct).then(function () {
+                        return res.json({ "message": "Product successfully delete from cart!" });
+                    })];
+            case 4:
+                _b.sent();
+                return [3 /*break*/, 6];
+            case 5: return [2 /*return*/, res.json({ "message": "User/Product not exist in cart!" })];
+            case 6: return [2 /*return*/, res.json({ "message": "Cart not updated" })];
+        }
+    });
+}); };
+exports.delProductToCart = delProductToCart;
+var getCart = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userid, userRepo, cartRepo, user, userCartProduct, total_1, totalAmount;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userid = req.params.userid;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                cartRepo = typeorm_1.getRepository(Cart_1.Cart);
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 1:
+                user = _a.sent();
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!user)
+                    throw new utils_1.Exception("User not found");
+                return [4 /*yield*/, cartRepo.find({
+                        relations: ['product'],
+                        where: {
+                            user: user
+                        }
+                    })];
+            case 2:
+                userCartProduct = _a.sent();
+                if (userCartProduct) {
+                    total_1 = 0;
+                    totalAmount = userCartProduct.map(function (item, i) {
+                        return total_1 += item.amount;
+                    });
+                    return [2 /*return*/, res.json({ userCartProduct: userCartProduct, "totalCart": total_1 })];
+                }
+                return [2 /*return*/, res.json({ "message": "Nothing to do" })];
+        }
+    });
+}); };
+exports.getCart = getCart;
+var passwordRecovery = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userRepo, user, token, userName;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userRepo = typeorm_1.getRepository(User_1.User);
+                return [4 /*yield*/, userRepo.findOne({ where: { email: req.body.email } })];
+            case 1:
+                user = _a.sent();
+                if (!user)
+                    throw new utils_1.Exception("Invalid email", 401);
+                token = jsonwebtoken_1["default"].sign({ user: user }, process.env.JWT_KEY, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN });
+                exports.refreshTokens.push(token);
+                userName = user.first_name + " " + user.last_name;
+                passRecovery_1.send_mail(userName, user.email, token);
+                return [2 /*return*/, res.json({ "message": "Email successfully sent" })];
+        }
+    });
+}); };
+exports.passwordRecovery = passwordRecovery;
+var addProductToFavorite = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, userid, productid, userRepo, productRepo, favoriteRepo, product, user, userFavoriteProduct, oneProductToFavorite, newProductToFavorite, results;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.params, userid = _a.userid, productid = _a.productid;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                productRepo = typeorm_1.getRepository(Product_1.Product);
+                favoriteRepo = typeorm_1.getRepository(UserFavoriteProduct_1.UserFavoriteProduct);
+                return [4 /*yield*/, productRepo.findOne({ where: { id: productid } })];
+            case 1:
+                product = _b.sent();
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 2:
+                user = _b.sent();
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!productid)
+                    throw new utils_1.Exception("Please specify a product id in url", 400);
+                if (!product)
+                    throw new utils_1.Exception("Product not exist!");
+                if (!user)
+                    throw new utils_1.Exception("User not found");
+                return [4 /*yield*/, favoriteRepo.findOne({
+                        relations: ['user', 'product'],
+                        where: {
+                            product: product,
+                            user: user
+                        }
+                    })];
+            case 3:
+                userFavoriteProduct = _b.sent();
+                if (userFavoriteProduct)
+                    throw new utils_1.Exception("Product already in user favorites!", 400);
+                oneProductToFavorite = new UserFavoriteProduct_1.UserFavoriteProduct();
+                oneProductToFavorite.user = user;
+                oneProductToFavorite.product = product;
+                newProductToFavorite = typeorm_1.getRepository(UserFavoriteProduct_1.UserFavoriteProduct).create(oneProductToFavorite);
+                return [4 /*yield*/, typeorm_1.getRepository(UserFavoriteProduct_1.UserFavoriteProduct).save(newProductToFavorite).then(function () {
+                        return res.json({ "message": "Product added successfully to favorites" });
+                    })];
+            case 4:
+                results = _b.sent();
+                return [2 /*return*/, res.json({ "message": "Favorite not updated" })];
+        }
+    });
+}); };
+exports.addProductToFavorite = addProductToFavorite;
+var getFavorites = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userid, userRepo, favoriteRepo, user, userFavoriteProduct;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userid = req.params.userid;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                favoriteRepo = typeorm_1.getRepository(UserFavoriteProduct_1.UserFavoriteProduct);
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 1:
+                user = _a.sent();
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!user)
+                    throw new utils_1.Exception("User not found");
+                return [4 /*yield*/, favoriteRepo.find({
+                        relations: ['product'],
+                        where: {
+                            user: user
+                        }
+                    })];
+            case 2:
+                userFavoriteProduct = _a.sent();
+                if (userFavoriteProduct) {
+                    return [2 /*return*/, res.json(userFavoriteProduct)];
+                }
+                return [2 /*return*/, res.json({ "message": "Nothing to do" })];
+        }
+    });
+}); };
+exports.getFavorites = getFavorites;
+var delProductToFavorite = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, userid, productid, userRepo, productRepo, favoriteRepo, product, user, userFavoriteProduct;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.params, userid = _a.userid, productid = _a.productid;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                productRepo = typeorm_1.getRepository(Product_1.Product);
+                favoriteRepo = typeorm_1.getRepository(UserFavoriteProduct_1.UserFavoriteProduct);
+                return [4 /*yield*/, productRepo.findOne({ where: { id: productid } })];
+            case 1:
+                product = _b.sent();
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 2:
+                user = _b.sent();
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!productid)
+                    throw new utils_1.Exception("Please specify a product id in url", 400);
+                if (!product)
+                    throw new utils_1.Exception("Product not exist!");
+                if (!user)
+                    throw new utils_1.Exception("User not found");
+                return [4 /*yield*/, favoriteRepo.findOne({
+                        relations: ['user', 'product'],
+                        where: {
+                            product: product,
+                            user: user
+                        }
+                    })];
+            case 3:
+                userFavoriteProduct = _b.sent();
+                if (!userFavoriteProduct)
+                    throw new utils_1.Exception("Product not exists in your favorites!", 400);
+                return [4 /*yield*/, favoriteRepo.remove(userFavoriteProduct).then(function () {
+                        return res.json({ "message": "Product remove successfully to favorites" });
+                    })];
+            case 4:
+                _b.sent();
+                return [2 /*return*/, res.json({ "message": "Favorite not updated" })];
+        }
+    });
+}); };
+exports.delProductToFavorite = delProductToFavorite;
