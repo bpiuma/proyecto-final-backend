@@ -9,6 +9,7 @@ import extend from 'extend'
 import { Cart } from './entities/Cart'
 import { UserFavoriteProduct } from './entities/UserFavoriteProduct'
 import { send_mail } from './emailTemplates/passRecovery'
+import { totalmem } from 'os'
 
 const image_finder = require('image-search-engine')
 
@@ -298,16 +299,16 @@ export const subProductToCart = async (req: Request, res: Response): Promise<Res
     if (userCartProduct) {
         userCartProduct.amount = (product.price * cant) - userCartProduct.amount
         userCartProduct.cant = (userCartProduct.cant - cant)
-        if(userCartProduct.cant >0){
+        if (userCartProduct.cant > 0) {
             await cartRepo.save(userCartProduct).then(() => {
                 return res.json({ "message": "Product Cantity/Amount successfully updated!" })
             })
-        }else{
+        } else {
             await cartRepo.remove(userCartProduct).then(() => {
-                return res.json({ "message": "Product successfully delete from cart!"})
+                return res.json({ "message": "Product successfully delete from cart!" })
             })
         }
-    }else return res.json({ "message": "User/Product not exist in cart!" })
+    } else return res.json({ "message": "User/Product not exist in cart!" })
 
     return res.json({ "message": "Cart not updated" })
 }
@@ -338,7 +339,7 @@ export const delProductToCart = async (req: Request, res: Response): Promise<Res
 
     if (userCartProduct) {
         await cartRepo.delete(userCartProduct).then(() => {
-            return res.json({ "message": "Product successfully delete from cart!"})
+            return res.json({ "message": "Product successfully delete from cart!" })
         })
     } else return res.json({ "message": "User/Product not exist in cart!" })
 
@@ -346,22 +347,26 @@ export const delProductToCart = async (req: Request, res: Response): Promise<Res
 }
 
 export const getCart = async (req: Request, res: Response): Promise<Response> => {
-    const { userid } = req.params    
-    const userRepo = getRepository(User)    
-    const cartRepo = getRepository(Cart)    
+    const { userid } = req.params
+    const userRepo = getRepository(User)
+    const cartRepo = getRepository(Cart)
     const user = await userRepo.findOne({ where: { id: userid } })
-    if (!userid) throw new Exception("Please specify a user id in url", 400)    
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
     if (!user) throw new Exception("User not found")
-    const userCartProduct = await cartRepo.findOne({
-        relations: ['user', 'product'],
-        where: {            
+    const userCartProduct = await cartRepo.find({
+        relations: ['product'],
+        where: {
             user: user
         }
     })
     if (userCartProduct) {
-        return res.json(userCartProduct)
+        let total: number = 0;
+        const totalAmount = userCartProduct.map((item, i) => {
+            return total += item.amount
+        })
+        return res.json({ userCartProduct, "totalCart": total })
     }
-    return res.json({ "message": "Cart not updated" })
+    return res.json({ "message": "Nothing to do" })
 }
 
 export const passwordRecovery = async (req: Request, res: Response): Promise<Response> => {
@@ -373,6 +378,90 @@ export const passwordRecovery = async (req: Request, res: Response): Promise<Res
     const token = jwt.sign({ user }, process.env.JWT_KEY as string, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN });
     refreshTokens.push(token);
     const userName = user.first_name + " " + user.last_name
-    send_mail (userName, user.email, token)
+    send_mail(userName, user.email, token)
     return res.json({ "message": "Email successfully sent" })
+}
+
+export const addProductToFavorite = async (req: Request, res: Response): Promise<Response> => {
+    const { userid, productid } = req.params
+    const userRepo = getRepository(User)
+    const productRepo = getRepository(Product)
+    const favoriteRepo = getRepository(UserFavoriteProduct)
+    const product = await productRepo.findOne({ where: { id: productid } })
+    const user = await userRepo.findOne({ where: { id: userid } })
+
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
+    if (!productid) throw new Exception("Please specify a product id in url", 400)
+
+    if (!product) throw new Exception("Product not exist!")
+    if (!user) throw new Exception("User not found")
+
+    const userFavoriteProduct = await favoriteRepo.findOne({
+        relations: ['user', 'product'],
+        where: {
+            product: product,
+            user: user
+        }
+    })
+
+    if(userFavoriteProduct) throw new Exception("Product already in user favorites!", 400)
+    const oneProductToFavorite = new UserFavoriteProduct()
+    oneProductToFavorite.user = user
+    oneProductToFavorite.product = product
+    const newProductToFavorite = getRepository(UserFavoriteProduct).create(oneProductToFavorite)
+    const results = await getRepository(UserFavoriteProduct).save(newProductToFavorite).then(() => {
+        return res.json({ "message": "Product added successfully to favorites" })
+    })
+
+    return res.json({ "message": "Favorite not updated" })
+}
+
+export const getFavorites = async (req: Request, res: Response): Promise<Response> => {
+    const { userid } = req.params
+    const userRepo = getRepository(User)
+    const favoriteRepo = getRepository(UserFavoriteProduct)
+    const user = await userRepo.findOne({ where: { id: userid } })
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
+    if (!user) throw new Exception("User not found")
+    const userFavoriteProduct = await favoriteRepo.find({
+        relations: ['product'],
+        where: {
+            user: user
+        }
+    })
+    if (userFavoriteProduct) {                
+        return res.json( userFavoriteProduct)
+    }
+    return res.json({ "message": "Nothing to do" })
+}
+
+export const delProductToFavorite = async (req: Request, res: Response): Promise<Response> => {
+    const { userid, productid } = req.params
+    const userRepo = getRepository(User)
+    const productRepo = getRepository(Product)
+    const favoriteRepo = getRepository(UserFavoriteProduct)
+    const product = await productRepo.findOne({ where: { id: productid } })
+    const user = await userRepo.findOne({ where: { id: userid } })
+
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
+    if (!productid) throw new Exception("Please specify a product id in url", 400)
+
+    if (!product) throw new Exception("Product not exist!")
+    if (!user) throw new Exception("User not found")
+
+    const userFavoriteProduct = await favoriteRepo.findOne({
+        relations: ['user', 'product'],
+        where: {
+            product: product,
+            user: user
+        }
+    })
+
+    if(!userFavoriteProduct) throw new Exception("Product not exists in your favorites!", 400)
+    
+    await favoriteRepo.remove(userFavoriteProduct).then(() => {
+        return res.json({ "message": "Product remove successfully to favorites" })
+    })
+
+    return res.json({ "message": "Favorite not updated" })
 }
