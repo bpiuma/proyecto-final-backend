@@ -8,6 +8,9 @@ export class Event extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
+    @Column({unique:true})
+    title: string;
+
     @Column()
     description: string;
 

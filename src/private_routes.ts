@@ -50,5 +50,9 @@ router.get('/favorite/user/:userid',verifyToken,safe(actions.getFavorites));
 router.delete('/favorite/delete/user/:userid/product/:productid',verifyToken,safe(actions.delProductToFavorite));
 router.post('/tasting/add/user/:userid/product/:productid',verifyToken,safe(actions.addProductToTasting));
 router.get('/tasting/user/:userid',verifyToken,safe(actions.getTasting));
+router.delete('/tasting/delete/user/:userid/product/:productid',verifyToken,safe(actions.delProductToTasting));
+router.post('/event',verifyToken,safe(actions.createEvent));
+router.get('/event',verifyToken,safe(actions.getEvents));
+//router.post('/event/add/:eventid/user/:userid',verifyToken,safe(actions.addUserToEvent));
 export default router;
 

@@ -37,6 +37,10 @@ var Event = /** @class */ (function (_super) {
         __metadata("design:type", Number)
     ], Event.prototype, "id");
     __decorate([
+        typeorm_1.Column({ unique: true }),
+        __metadata("design:type", String)
+    ], Event.prototype, "title");
+    __decorate([
         typeorm_1.Column(),
         __metadata("design:type", String)
     ], Event.prototype, "description");

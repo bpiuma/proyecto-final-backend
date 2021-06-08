@@ -13,6 +13,7 @@ import { totalmem } from 'os'
 import { Tasting } from './entities/Tasting'
 import { Company } from './entities/Company'
 import { Store } from './entities/Store'
+import { Event } from './entities/Event'
 const image_finder = require('image-search-engine')
 
 export let refreshTokens: any[] = [];
@@ -371,13 +372,13 @@ export const getCart = async (req: Request, res: Response): Promise<Response> =>
             user: user
         }
     })
-    if (userCartProduct) {
+    if (userCartProduct.length) {
         let total: number = 0;
         const totalAmount = userCartProduct.map((item, i) => {
             return total += item.amount
         })
         return res.json({ userCartProduct, "totalCart": total })
-    }
+    }else throw new Exception("The user has no products in cart",400)
     return res.json({ "message": "Nothing to do" })
 }
 
@@ -441,9 +442,9 @@ export const getFavorites = async (req: Request, res: Response): Promise<Respons
             user: user
         }
     })
-    if (userFavoriteProduct) {                
+    if (userFavoriteProduct.length) {                
         return res.json( userFavoriteProduct)
-    }
+    }else throw new Exception("User does not have favorite products")
     return res.json({ "message": "Nothing to do" })
 }
 
@@ -542,9 +543,10 @@ export const getTasting = async (req: Request, res: Response): Promise<Response>
         }
     })
     
-    if(userTastingProduct) {
+    if(userTastingProduct.length) {
         return res.json(userTastingProduct)
     }
+    else throw new Exception("The user is not tasting products",400)
 
     return res.json({ "message": "Nothing to do" })
 }
@@ -597,3 +599,62 @@ export const createStore = async (req: Request, res: Response): Promise<Response
     return res.json(results);
 }
 
+export const delProductToTasting = async (req: Request, res: Response): Promise<Response> => {
+    const { userid, productid } = req.params
+    const userRepo = getRepository(User)
+    const productRepo = getRepository(Product)
+    const tastingRepo = getRepository(Tasting)
+    const product = await productRepo.findOne({ where: { id: productid } })
+    const user = await userRepo.findOne({ where: { id: userid } })
+
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
+    if (!productid) throw new Exception("Please specify a product id in url", 400)
+
+    if (!product) throw new Exception("Product not exist!")
+    if (!user) throw new Exception("User not found")
+
+    const userFavoriteProduct = await tastingRepo.findOne({
+        relations: ['user', 'product'],
+        where: {
+            product: product,
+            user: user
+        }
+    })
+
+    if(!userFavoriteProduct) throw new Exception("Product not exists in your Tasting!", 400)
+    
+    await tastingRepo.remove(userFavoriteProduct).then(() => {
+        return res.json({ "message": "Product remove successfully to tasting" })
+    })
+
+    return res.json({ "message": "Tasting not updated" })
+}
+
+export const createEvent = async (req: Request, res: Response): Promise<Response> => {
+    const { title, description, start_date, end_date, link_zoom } = req.body    
+    if (!title) throw new Exception("Please provide a name for the event")
+    if (!description) throw new Exception("Please provide a description")
+    if (!start_date) throw new Exception("Please provide a start date for the event")
+    if (!end_date) throw new Exception("Please provide a end date for the event")
+    if (!link_zoom) throw new Exception("Please provide a link of zoom meeting")
+    
+    const eventRepo = getRepository(Event)
+    const event = await eventRepo.findOne({ where: { title: title } })
+    if (event) throw new Exception("Event title already exists")
+    
+    let oneEvent = new Event();
+    oneEvent.title = title;    
+    oneEvent.description = description;
+    oneEvent.start_date = start_date;
+    oneEvent.end_date = end_date;
+    oneEvent.link_zoom = link_zoom
+    
+    const newEvent = eventRepo.create(oneEvent);
+    const results = await eventRepo.save(newEvent);
+    return res.json(results);
+}
+
+export const getEvents = async (req: Request, res: Response): Promise<Response> => {               
+     const events = await getRepository(Event).find({ select: ["id", "title", "description", "start_date", "end_date", "link_zoom"] });
+    return res.json(events);
+}
