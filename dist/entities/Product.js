@@ -65,6 +65,10 @@ var Product = /** @class */ (function (_super) {
         __metadata("design:type", Number)
     ], Product.prototype, "price");
     __decorate([
+        typeorm_1.Column({ nullable: true, "default": 50 }),
+        __metadata("design:type", Number)
+    ], Product.prototype, "discountTasting");
+    __decorate([
         typeorm_1.Column({ nullable: true }),
         __metadata("design:type", String)
     ], Product.prototype, "designation");

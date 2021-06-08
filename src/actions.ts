@@ -10,7 +10,9 @@ import { Cart } from './entities/Cart'
 import { UserFavoriteProduct } from './entities/UserFavoriteProduct'
 import { send_mail } from './emailTemplates/passRecovery'
 import { totalmem } from 'os'
-
+import { Tasting } from './entities/Tasting'
+import { Company } from './entities/Company'
+import { Store } from './entities/Store'
 const image_finder = require('image-search-engine')
 
 export let refreshTokens: any[] = [];
@@ -66,7 +68,16 @@ export const getProducts = async (req: Request, res: Response): Promise<Response
     return res.json(products);
 }
 export const createBaseProducts = async (req: Request, res: Response): Promise<Response> => {
-    const baseURL = "https://gist.githubusercontent.com/ajubin/d331f3251db4bd239c7a1efd0af54e38/raw/058e1ad07398fc62ab7f3fcc13ef1007a48d01d7/wine-data-set.json";
+    const baseURL = "https://raw.githubusercontent.com/acampopiano/wine-data-set/master/wine-data-set-test.json";
+    const {companyid} = req.params
+
+    const companyRepo = getRepository(Company)
+    const company = await companyRepo.findOne({where:{id:companyid}})
+    
+
+    if(!companyid) throw new Exception("Please specify a company id in url", 400)
+
+    if(!company) throw new Exception("Company id not exist!", 400)
 
     const fetchProductsData = await fetch(baseURL, {
         headers: {
@@ -79,10 +90,11 @@ export const createBaseProducts = async (req: Request, res: Response): Promise<R
                 throw new Error("Bad response from server");
             }
             const responseJson = await res.json();
-            return responseJson;
+            return responseJson.results;
         })
         .then(async product => {
             product.map(async (item: any, index: any) => {
+                req.body.image = await image_finder.find(item.title, {size: "large"})
                 req.body.points = item.points
                 req.body.title = item.title
                 req.body.description = item.description
@@ -94,11 +106,11 @@ export const createBaseProducts = async (req: Request, res: Response): Promise<R
                 req.body.region_1 = item.region_1
                 req.body.region_2 = item.region_2
                 req.body.province = item.province
-                req.body.country = item.country
-                req.body.image = await image_finder.find(item.title, { size: "large" })
+                req.body.country = item.country                
                 req.body.winery = item.winery
+                req.body.company = company
                 const newProduct = getRepository(Product).create(req.body);  //Creo por cada iteración el producto
-                const results = await getRepository(Product).save(newProduct); //Grabo el nuevo personaje
+                const results = await getRepository(Product).save(newProduct); //Grabo el nuevo personaje              
             });
 
         })
@@ -465,3 +477,123 @@ export const delProductToFavorite = async (req: Request, res: Response): Promise
 
     return res.json({ "message": "Favorite not updated" })
 }
+
+export const addProductToTasting = async (req: Request, res: Response): Promise<Response> => {
+    const { userid, productid } = req.params
+    const userRepo = getRepository(User)
+    const productRepo = getRepository(Product)
+    const tastingRepo = getRepository(Tasting)
+    const product = await productRepo.findOne({ where: { id: productid } })
+    const user = await userRepo.findOne({ where: { id: userid } })
+    const productToTasting:number = 3;
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
+    if (!productid) throw new Exception("Please specify a product id in url", 400)
+
+    if (!product) throw new Exception("Product not exist!",400)
+    if (!user) throw new Exception("User not found",400)
+    const productCount = await tastingRepo.count({ where: {user,state:true}});
+    if(productCount<productToTasting){
+        const userTastingProduct = await tastingRepo.findOne({
+            relations: ['user', 'product'],
+            where: {
+                product: product,
+                user: user,
+                state: true
+            }
+        })
+    
+        if(userTastingProduct) throw new Exception("Product already in user tasting!", 400)
+
+        let startdate = new Date()
+        let enddate = new Date(Date.now() + (30 * 24 * 60 * 60 * 1000));
+        
+        const oneProductToTasting = new Tasting()
+        oneProductToTasting.user = user
+        oneProductToTasting.product = product
+        oneProductToTasting.start_date = startdate
+        oneProductToTasting.end_date = enddate
+        oneProductToTasting.price = Math.floor((product.price * product.discountTasting)/100)
+        oneProductToTasting.state = true
+        const newProductToTasting = getRepository(Tasting).create(oneProductToTasting)
+        const results = await getRepository(Tasting).save(newProductToTasting).then(() => {
+            return res.json({ "message": "Product added successfully to Tasting!"})
+        })
+    }else throw new Exception("You cannot taste any more wines at the moment",400)
+
+    return res.json({ "message": "Tasting not updated" })
+}
+
+export const getTasting = async (req: Request, res: Response): Promise<Response> => {
+    const { userid } = req.params
+    const userRepo = getRepository(User)
+    const productRepo = getRepository(Product)
+    const tastingRepo = getRepository(Tasting)    
+    const user = await userRepo.findOne({ where: { id: userid } })
+   
+    if (!userid) throw new Exception("Please specify a user id in url", 400)    
+    
+    if (!user) throw new Exception("User not found",400)
+
+    const userTastingProduct = await tastingRepo.find({
+        relations: ['product'],
+        where: {            
+            user: user,
+            state: true
+        }
+    })
+    
+    if(userTastingProduct) {
+        return res.json(userTastingProduct)
+    }
+
+    return res.json({ "message": "Nothing to do" })
+}
+
+export const createCompany = async (req: Request, res: Response): Promise<Response> => {
+    const { name, address, phone_1, phone_2, site_url } = req.body    
+    const {storeid} = req.params
+    if (!name) throw new Exception("Please provide a company name")
+    if (!address) throw new Exception("Please provide a address")
+    if (!phone_1) throw new Exception("Please provide a phone_1")
+    if (!phone_2) throw new Exception("Please provide a phone_2")
+    if (!site_url) throw new Exception("Please provide a site url")
+    const storeRepo = getRepository(Store)
+    const companyRepo = getRepository(Company)
+    const store = await storeRepo.findOne({where:{id:storeid}})
+    const company = await companyRepo.findOne({ where: { name: req.body.name, site_url:req.body.site_url } })
+    if (!storeid) throw new Exception("Please specify a company id in url", 400)    
+    if (company) throw new Exception("Company name already exists",400)
+    if (!store) throw new Exception("Store not exists!",400)
+    let oneCompany = new Company()
+    oneCompany.name = name
+    oneCompany.address = address
+    oneCompany.phone_1 = phone_1
+    oneCompany.phone_2 = phone_2
+    oneCompany.site_url = site_url
+    oneCompany.store = store
+    const newCompany = companyRepo.create(oneCompany)
+    const results = await companyRepo.save(newCompany)
+    return res.json(results)
+}
+
+export const createStore = async (req: Request, res: Response): Promise<Response> => {
+    const { name, address, phone_1, phone_2 } = req.body    
+    if (!name) throw new Exception("Please provide a company name")
+    if (!address) throw new Exception("Please provide a address")
+    if (!phone_1) throw new Exception("Please provide a phone_1")
+    if (!phone_2) throw new Exception("Please provide a phone_2")
+    
+    const storeRepo = getRepository(Store)
+    const store = await storeRepo.findOne({ where: { name: req.body.name } })
+    if (store) throw new Exception("Store name already exists")
+    let oneStore = new Store();
+    oneStore.name = name;    
+    oneStore.address = address;
+    oneStore.phone_1 = phone_1;
+    oneStore.phone_2 = phone_2;
+    
+    const newStore = storeRepo.create(oneStore);
+    const results = await storeRepo.save(newStore);
+    return res.json(results);
+}
+

@@ -52,7 +52,9 @@ var verifyToken = function (req, res, next) {
 // declare a new router to include all the endpoints
 var router = express_1.Router();
 router.get('/user', verifyToken, utils_1.safe(actions.getUsers));
-router.post('/createBaseProducts', verifyToken, utils_1.safe(actions.createBaseProducts));
+router.post('/product/add/company/:companyid', verifyToken, utils_1.safe(actions.createBaseProducts));
+router.post('/store', verifyToken, utils_1.safe(actions.createStore));
+router.post('/company/add/store/:storeid', verifyToken, utils_1.safe(actions.createCompany));
 router["delete"]('/logout', verifyToken, utils_1.safe(actions.logout));
 router.put('/user/:userid/resetPassword', verifyToken, utils_1.safe(actions.resetPassword));
 router.put('/user/:id', verifyToken, utils_1.safe(actions.updateUser));
@@ -65,4 +67,6 @@ router.get('/cart/user/:userid', verifyToken, utils_1.safe(actions.getCart));
 router.post('/favorite/add/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.addProductToFavorite));
 router.get('/favorite/user/:userid', verifyToken, utils_1.safe(actions.getFavorites));
 router["delete"]('/favorite/delete/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.delProductToFavorite));
+router.post('/tasting/add/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.addProductToTasting));
+router.get('/tasting/user/:userid', verifyToken, utils_1.safe(actions.getTasting));
 exports["default"] = router;
