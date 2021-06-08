@@ -45,6 +45,14 @@ var Store = /** @class */ (function (_super) {
         __metadata("design:type", String)
     ], Store.prototype, "address");
     __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", Number)
+    ], Store.prototype, "phone_1");
+    __decorate([
+        typeorm_1.Column(),
+        __metadata("design:type", Number)
+    ], Store.prototype, "phone_2");
+    __decorate([
         typeorm_1.OneToMany(function () { return Company_1.Company; }, function (company) { return company.store; }),
         __metadata("design:type", Array)
     ], Store.prototype, "companies");

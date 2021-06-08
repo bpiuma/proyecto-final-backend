@@ -30,6 +30,9 @@ export class Product extends BaseEntity {
     @Column({nullable: true })
     price: number;
 
+    @Column({nullable: true, default:50 })
+    discountTasting: number;
+
     @Column({nullable: true })
     designation: string;
 
@@ -53,7 +56,7 @@ export class Product extends BaseEntity {
 
     @Column({nullable: true })
     image: string;
-
+    
     @ManyToOne(() => Company, company => company.products)
     company: Company;
 

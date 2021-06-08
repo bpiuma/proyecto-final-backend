@@ -33,7 +33,9 @@ const verifyToken = (req: Request, res: Response, next:NextFunction) =>
 const router = Router();
 
 router.get('/user', verifyToken, safe(actions.getUsers));
-router.post('/createBaseProducts', verifyToken, safe(actions.createBaseProducts));
+router.post('/product/add/company/:companyid', verifyToken, safe(actions.createBaseProducts));
+router.post('/store',verifyToken,safe(actions.createStore));
+router.post('/company/add/store/:storeid',verifyToken,safe(actions.createCompany));
 router.delete('/logout',verifyToken, safe(actions.logout));
 router.put('/user/:userid/resetPassword', verifyToken, safe(actions.resetPassword));
 router.put('/user/:id', verifyToken, safe(actions.updateUser));
@@ -46,5 +48,7 @@ router.get('/cart/user/:userid',verifyToken,safe(actions.getCart));
 router.post('/favorite/add/user/:userid/product/:productid',verifyToken,safe(actions.addProductToFavorite));
 router.get('/favorite/user/:userid',verifyToken,safe(actions.getFavorites));
 router.delete('/favorite/delete/user/:userid/product/:productid',verifyToken,safe(actions.delProductToFavorite));
+router.post('/tasting/add/user/:userid/product/:productid',verifyToken,safe(actions.addProductToTasting));
+router.get('/tasting/user/:userid',verifyToken,safe(actions.getTasting));
 export default router;
 

@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.delProductToFavorite = exports.getFavorites = exports.addProductToFavorite = exports.passwordRecovery = exports.getCart = exports.delProductToCart = exports.subProductToCart = exports.addProductToCart = exports.deleteUser = exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
+exports.createStore = exports.createCompany = exports.getTasting = exports.addProductToTasting = exports.delProductToFavorite = exports.getFavorites = exports.addProductToFavorite = exports.passwordRecovery = exports.getCart = exports.delProductToCart = exports.subProductToCart = exports.addProductToCart = exports.deleteUser = exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
@@ -49,6 +49,9 @@ var cross_fetch_1 = __importDefault(require("cross-fetch"));
 var Cart_1 = require("./entities/Cart");
 var UserFavoriteProduct_1 = require("./entities/UserFavoriteProduct");
 var passRecovery_1 = require("./emailTemplates/passRecovery");
+var Tasting_1 = require("./entities/Tasting");
+var Company_1 = require("./entities/Company");
+var Store_1 = require("./entities/Store");
 var image_finder = require('image-search-engine');
 exports.refreshTokens = [];
 var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
@@ -131,11 +134,20 @@ var getProducts = function (req, res) { return __awaiter(void 0, void 0, void 0,
 }); };
 exports.getProducts = getProducts;
 var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var baseURL, fetchProductsData, r;
+    var baseURL, companyid, companyRepo, company, fetchProductsData, r;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
-                baseURL = "https://gist.githubusercontent.com/ajubin/d331f3251db4bd239c7a1efd0af54e38/raw/058e1ad07398fc62ab7f3fcc13ef1007a48d01d7/wine-data-set.json";
+                baseURL = "https://raw.githubusercontent.com/acampopiano/wine-data-set/master/wine-data-set-test.json";
+                companyid = req.params.companyid;
+                companyRepo = typeorm_1.getRepository(Company_1.Company);
+                return [4 /*yield*/, companyRepo.findOne({ where: { id: companyid } })];
+            case 1:
+                company = _a.sent();
+                if (!companyid)
+                    throw new utils_1.Exception("Please specify a company id in url", 400);
+                if (!company)
+                    throw new utils_1.Exception("Company id not exist!", 400);
                 return [4 /*yield*/, cross_fetch_1["default"](baseURL, {
                         headers: {
                             'Content-Type': 'application/json',
@@ -153,7 +165,7 @@ var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, 
                                     return [4 /*yield*/, res.json()];
                                 case 1:
                                     responseJson = _a.sent();
-                                    return [2 /*return*/, responseJson];
+                                    return [2 /*return*/, responseJson.results];
                             }
                         });
                     }); })
@@ -164,6 +176,10 @@ var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, 
                                 return __generator(this, function (_b) {
                                     switch (_b.label) {
                                         case 0:
+                                            _a = req.body;
+                                            return [4 /*yield*/, image_finder.find(item.title, { size: "large" })];
+                                        case 1:
+                                            _a.image = _b.sent();
                                             req.body.points = item.points;
                                             req.body.title = item.title;
                                             req.body.description = item.description;
@@ -176,11 +192,8 @@ var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, 
                                             req.body.region_2 = item.region_2;
                                             req.body.province = item.province;
                                             req.body.country = item.country;
-                                            _a = req.body;
-                                            return [4 /*yield*/, image_finder.find(item.title, { size: "large" })];
-                                        case 1:
-                                            _a.image = _b.sent();
                                             req.body.winery = item.winery;
+                                            req.body.company = company;
                                             newProduct = typeorm_1.getRepository(Product_1.Product).create(req.body);
                                             return [4 /*yield*/, typeorm_1.getRepository(Product_1.Product).save(newProduct)];
                                         case 2:
@@ -194,7 +207,7 @@ var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, 
                     }); })["catch"](function (err) {
                         console.error(err);
                     })];
-            case 1:
+            case 2:
                 fetchProductsData = _a.sent();
                 r = {
                     message: "All Products are created",
@@ -739,3 +752,179 @@ var delProductToFavorite = function (req, res) { return __awaiter(void 0, void 0
     });
 }); };
 exports.delProductToFavorite = delProductToFavorite;
+var addProductToTasting = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, userid, productid, userRepo, productRepo, tastingRepo, product, user, productToTasting, productCount, userTastingProduct, startdate, enddate, oneProductToTasting, newProductToTasting, results;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.params, userid = _a.userid, productid = _a.productid;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                productRepo = typeorm_1.getRepository(Product_1.Product);
+                tastingRepo = typeorm_1.getRepository(Tasting_1.Tasting);
+                return [4 /*yield*/, productRepo.findOne({ where: { id: productid } })];
+            case 1:
+                product = _b.sent();
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 2:
+                user = _b.sent();
+                productToTasting = 3;
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!productid)
+                    throw new utils_1.Exception("Please specify a product id in url", 400);
+                if (!product)
+                    throw new utils_1.Exception("Product not exist!", 400);
+                if (!user)
+                    throw new utils_1.Exception("User not found", 400);
+                return [4 /*yield*/, tastingRepo.count({ where: { user: user, state: true } })];
+            case 3:
+                productCount = _b.sent();
+                if (!(productCount < productToTasting)) return [3 /*break*/, 6];
+                return [4 /*yield*/, tastingRepo.findOne({
+                        relations: ['user', 'product'],
+                        where: {
+                            product: product,
+                            user: user,
+                            state: true
+                        }
+                    })];
+            case 4:
+                userTastingProduct = _b.sent();
+                if (userTastingProduct)
+                    throw new utils_1.Exception("Product already in user tasting!", 400);
+                startdate = new Date();
+                enddate = new Date(Date.now() + (30 * 24 * 60 * 60 * 1000));
+                oneProductToTasting = new Tasting_1.Tasting();
+                oneProductToTasting.user = user;
+                oneProductToTasting.product = product;
+                oneProductToTasting.start_date = startdate;
+                oneProductToTasting.end_date = enddate;
+                oneProductToTasting.price = Math.floor((product.price * product.discountTasting) / 100);
+                oneProductToTasting.state = true;
+                newProductToTasting = typeorm_1.getRepository(Tasting_1.Tasting).create(oneProductToTasting);
+                return [4 /*yield*/, typeorm_1.getRepository(Tasting_1.Tasting).save(newProductToTasting).then(function () {
+                        return res.json({ "message": "Product added successfully to Tasting!" });
+                    })];
+            case 5:
+                results = _b.sent();
+                return [3 /*break*/, 7];
+            case 6: throw new utils_1.Exception("You cannot taste any more wines at the moment", 400);
+            case 7: return [2 /*return*/, res.json({ "message": "Tasting not updated" })];
+        }
+    });
+}); };
+exports.addProductToTasting = addProductToTasting;
+var getTasting = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userid, userRepo, productRepo, tastingRepo, user, userTastingProduct;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userid = req.params.userid;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                productRepo = typeorm_1.getRepository(Product_1.Product);
+                tastingRepo = typeorm_1.getRepository(Tasting_1.Tasting);
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 1:
+                user = _a.sent();
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!user)
+                    throw new utils_1.Exception("User not found", 400);
+                return [4 /*yield*/, tastingRepo.find({
+                        relations: ['product'],
+                        where: {
+                            user: user,
+                            state: true
+                        }
+                    })];
+            case 2:
+                userTastingProduct = _a.sent();
+                if (userTastingProduct) {
+                    return [2 /*return*/, res.json(userTastingProduct)];
+                }
+                return [2 /*return*/, res.json({ "message": "Nothing to do" })];
+        }
+    });
+}); };
+exports.getTasting = getTasting;
+var createCompany = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, name, address, phone_1, phone_2, site_url, storeid, storeRepo, companyRepo, store, company, oneCompany, newCompany, results;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.body, name = _a.name, address = _a.address, phone_1 = _a.phone_1, phone_2 = _a.phone_2, site_url = _a.site_url;
+                storeid = req.params.storeid;
+                if (!name)
+                    throw new utils_1.Exception("Please provide a company name");
+                if (!address)
+                    throw new utils_1.Exception("Please provide a address");
+                if (!phone_1)
+                    throw new utils_1.Exception("Please provide a phone_1");
+                if (!phone_2)
+                    throw new utils_1.Exception("Please provide a phone_2");
+                if (!site_url)
+                    throw new utils_1.Exception("Please provide a site url");
+                storeRepo = typeorm_1.getRepository(Store_1.Store);
+                companyRepo = typeorm_1.getRepository(Company_1.Company);
+                return [4 /*yield*/, storeRepo.findOne({ where: { id: storeid } })];
+            case 1:
+                store = _b.sent();
+                return [4 /*yield*/, companyRepo.findOne({ where: { name: req.body.name, site_url: req.body.site_url } })];
+            case 2:
+                company = _b.sent();
+                if (!storeid)
+                    throw new utils_1.Exception("Please specify a company id in url", 400);
+                if (company)
+                    throw new utils_1.Exception("Company name already exists", 400);
+                if (!store)
+                    throw new utils_1.Exception("Store not exists!", 400);
+                oneCompany = new Company_1.Company();
+                oneCompany.name = name;
+                oneCompany.address = address;
+                oneCompany.phone_1 = phone_1;
+                oneCompany.phone_2 = phone_2;
+                oneCompany.site_url = site_url;
+                oneCompany.store = store;
+                newCompany = companyRepo.create(oneCompany);
+                return [4 /*yield*/, companyRepo.save(newCompany)];
+            case 3:
+                results = _b.sent();
+                return [2 /*return*/, res.json(results)];
+        }
+    });
+}); };
+exports.createCompany = createCompany;
+var createStore = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, name, address, phone_1, phone_2, storeRepo, store, oneStore, newStore, results;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.body, name = _a.name, address = _a.address, phone_1 = _a.phone_1, phone_2 = _a.phone_2;
+                if (!name)
+                    throw new utils_1.Exception("Please provide a company name");
+                if (!address)
+                    throw new utils_1.Exception("Please provide a address");
+                if (!phone_1)
+                    throw new utils_1.Exception("Please provide a phone_1");
+                if (!phone_2)
+                    throw new utils_1.Exception("Please provide a phone_2");
+                storeRepo = typeorm_1.getRepository(Store_1.Store);
+                return [4 /*yield*/, storeRepo.findOne({ where: { name: req.body.name } })];
+            case 1:
+                store = _b.sent();
+                if (store)
+                    throw new utils_1.Exception("Store name already exists");
+                oneStore = new Store_1.Store();
+                oneStore.name = name;
+                oneStore.address = address;
+                oneStore.phone_1 = phone_1;
+                oneStore.phone_2 = phone_2;
+                newStore = storeRepo.create(oneStore);
+                return [4 /*yield*/, storeRepo.save(newStore)];
+            case 2:
+                results = _b.sent();
+                return [2 /*return*/, res.json(results)];
+        }
+    });
+}); };
+exports.createStore = createStore;

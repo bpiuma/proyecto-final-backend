@@ -14,6 +14,12 @@ export class Store extends BaseEntity {
     @Column()
     address: string;
 
+    @Column()
+    phone_1: number;
+
+    @Column()
+    phone_2: number;
+
     @OneToMany(() => Company, company => company.store)
     companies: Company[];
 
