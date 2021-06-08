@@ -26,7 +26,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 exports.__esModule = true;
 exports.Event = void 0;
 var typeorm_1 = require("typeorm");
-var EventUserProduct_1 = require("./EventUserProduct");
+var EventUser_1 = require("./EventUser");
+var Product_1 = require("./Product");
 var Event = /** @class */ (function (_super) {
     __extends(Event, _super);
     function Event() {
@@ -57,9 +58,14 @@ var Event = /** @class */ (function (_super) {
         __metadata("design:type", String)
     ], Event.prototype, "link_zoom");
     __decorate([
-        typeorm_1.OneToMany(function () { return EventUserProduct_1.EventUserProduct; }, function (eventUserProduct) { return eventUserProduct.event; }),
+        typeorm_1.OneToMany(function () { return EventUser_1.EventUser; }, function (eventUser) { return eventUser.event; }),
         __metadata("design:type", Array)
-    ], Event.prototype, "userProduct");
+    ], Event.prototype, "users");
+    __decorate([
+        typeorm_1.OneToOne(function () { return Product_1.Product; }),
+        typeorm_1.JoinColumn(),
+        __metadata("design:type", Product_1.Product)
+    ], Event.prototype, "product");
     Event = __decorate([
         typeorm_1.Entity()
     ], Event);

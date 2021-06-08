@@ -4,7 +4,7 @@ import {
 import { UserFavoriteProduct } from './UserFavoriteProduct';
 import { Tasting } from './Tasting';
 import { Cart } from './Cart';
-import { EventUserProduct } from './EventUserProduct';
+import { EventUser } from './EventUser';
 import * as bcrypt from 'bcryptjs';
 import { Length, IsNotEmpty } from "class-validator";
 
@@ -53,6 +53,6 @@ export class User extends BaseEntity {
     @OneToMany(() => Cart, cart => cart.user)
     carts: Cart[];
 
-    @OneToMany(() => EventUserProduct, eventUserProduct => eventUserProduct.user)
-    eventProduct: EventUserProduct[];    
+    @OneToMany(() => EventUser, eventUser => eventUser.user)
+    events: EventUser[];    
 }

@@ -5,7 +5,6 @@ import { Company } from './Company';
 import { UserFavoriteProduct } from './UserFavoriteProduct';
 import { Tasting } from './Tasting';
 import { Cart } from './Cart';
-import { EventUserProduct } from './EventUserProduct';
 
 @Entity()
 export class Product extends BaseEntity {
@@ -68,8 +67,5 @@ export class Product extends BaseEntity {
 
     @OneToMany(() => Cart, cart => cart.product,{cascade: true})
     carts: Cart[];
-
-    @OneToMany(() => EventUserProduct, eventUserProduct => eventUserProduct.product,{cascade: true})
-    eventUser: EventUserProduct[];
 
 }
