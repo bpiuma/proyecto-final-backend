@@ -69,4 +69,8 @@ router.get('/favorite/user/:userid', verifyToken, utils_1.safe(actions.getFavori
 router["delete"]('/favorite/delete/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.delProductToFavorite));
 router.post('/tasting/add/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.addProductToTasting));
 router.get('/tasting/user/:userid', verifyToken, utils_1.safe(actions.getTasting));
+router["delete"]('/tasting/delete/user/:userid/product/:productid', verifyToken, utils_1.safe(actions.delProductToTasting));
+router.post('/event', verifyToken, utils_1.safe(actions.createEvent));
+router.get('/event', verifyToken, utils_1.safe(actions.getEvents));
+//router.post('/event/add/:eventid/user/:userid',verifyToken,safe(actions.addUserToEvent));
 exports["default"] = router;
