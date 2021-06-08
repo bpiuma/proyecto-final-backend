@@ -107,7 +107,7 @@ var renderIndex = function (_app, url) { return __awaiter(void 0, void 0, void 0
         data = {
             host: url,
             routes: routes,
-            rigo: "https://github.com/4GeeksAcademy/expressjs-rest-hello/blob/master/docs/assets/rigo-baby.jpeg?raw=true",
+            logo: "https://github.com/bpiuma/proyecto-final-backend/blob/develop/docs/assets/copaVino.png?raw=false",
             starter: "https://start.4geeksacademy.com/starters/express"
         };
         return [2 /*return*/, new Promise(function (resolve, reject) {

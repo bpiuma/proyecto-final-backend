@@ -14,6 +14,7 @@ import { Tasting } from './entities/Tasting'
 import { Company } from './entities/Company'
 import { Store } from './entities/Store'
 import { Event } from './entities/Event'
+import { EventUser } from './entities/EventUser'
 const image_finder = require('image-search-engine')
 
 export let refreshTokens: any[] = [];
@@ -70,15 +71,15 @@ export const getProducts = async (req: Request, res: Response): Promise<Response
 }
 export const createBaseProducts = async (req: Request, res: Response): Promise<Response> => {
     const baseURL = "https://raw.githubusercontent.com/acampopiano/wine-data-set/master/wine-data-set-test.json";
-    const {companyid} = req.params
+    const { companyid } = req.params
 
     const companyRepo = getRepository(Company)
-    const company = await companyRepo.findOne({where:{id:companyid}})
-    
+    const company = await companyRepo.findOne({ where: { id: companyid } })
 
-    if(!companyid) throw new Exception("Please specify a company id in url", 400)
 
-    if(!company) throw new Exception("Company id not exist!", 400)
+    if (!companyid) throw new Exception("Please specify a company id in url", 400)
+
+    if (!company) throw new Exception("Company id not exist!", 400)
 
     const fetchProductsData = await fetch(baseURL, {
         headers: {
@@ -95,7 +96,7 @@ export const createBaseProducts = async (req: Request, res: Response): Promise<R
         })
         .then(async product => {
             product.map(async (item: any, index: any) => {
-                req.body.image = await image_finder.find(item.title, {size: "large"})
+                req.body.image = await image_finder.find(item.title, { size: "large" })
                 req.body.points = item.points
                 req.body.title = item.title
                 req.body.description = item.description
@@ -107,7 +108,7 @@ export const createBaseProducts = async (req: Request, res: Response): Promise<R
                 req.body.region_1 = item.region_1
                 req.body.region_2 = item.region_2
                 req.body.province = item.province
-                req.body.country = item.country                
+                req.body.country = item.country
                 req.body.winery = item.winery
                 req.body.company = company
                 const newProduct = getRepository(Product).create(req.body);  //Creo por cada iteración el producto
@@ -378,7 +379,7 @@ export const getCart = async (req: Request, res: Response): Promise<Response> =>
             return total += item.amount
         })
         return res.json({ userCartProduct, "totalCart": total })
-    }else throw new Exception("The user has no products in cart",400)
+    } else throw new Exception("The user has no products in cart", 400)
     return res.json({ "message": "Nothing to do" })
 }
 
@@ -417,7 +418,7 @@ export const addProductToFavorite = async (req: Request, res: Response): Promise
         }
     })
 
-    if(userFavoriteProduct) throw new Exception("Product already in user favorites!", 400)
+    if (userFavoriteProduct) throw new Exception("Product already in user favorites!", 400)
     const oneProductToFavorite = new UserFavoriteProduct()
     oneProductToFavorite.user = user
     oneProductToFavorite.product = product
@@ -442,9 +443,9 @@ export const getFavorites = async (req: Request, res: Response): Promise<Respons
             user: user
         }
     })
-    if (userFavoriteProduct.length) {                
-        return res.json( userFavoriteProduct)
-    }else throw new Exception("User does not have favorite products")
+    if (userFavoriteProduct.length) {
+        return res.json(userFavoriteProduct)
+    } else throw new Exception("User does not have favorite products")
     return res.json({ "message": "Nothing to do" })
 }
 
@@ -470,8 +471,8 @@ export const delProductToFavorite = async (req: Request, res: Response): Promise
         }
     })
 
-    if(!userFavoriteProduct) throw new Exception("Product not exists in your favorites!", 400)
-    
+    if (!userFavoriteProduct) throw new Exception("Product not exists in your favorites!", 400)
+
     await favoriteRepo.remove(userFavoriteProduct).then(() => {
         return res.json({ "message": "Product remove successfully to favorites" })
     })
@@ -486,14 +487,14 @@ export const addProductToTasting = async (req: Request, res: Response): Promise<
     const tastingRepo = getRepository(Tasting)
     const product = await productRepo.findOne({ where: { id: productid } })
     const user = await userRepo.findOne({ where: { id: userid } })
-    const productToTasting:number = 3;
+    const productToTasting: number = 3;
     if (!userid) throw new Exception("Please specify a user id in url", 400)
     if (!productid) throw new Exception("Please specify a product id in url", 400)
 
-    if (!product) throw new Exception("Product not exist!",400)
-    if (!user) throw new Exception("User not found",400)
-    const productCount = await tastingRepo.count({ where: {user,state:true}});
-    if(productCount<productToTasting){
+    if (!product) throw new Exception("Product not exist!", 400)
+    if (!user) throw new Exception("User not found", 400)
+    const productCount = await tastingRepo.count({ where: { user, state: true } });
+    if (productCount < productToTasting) {
         const userTastingProduct = await tastingRepo.findOne({
             relations: ['user', 'product'],
             where: {
@@ -502,24 +503,24 @@ export const addProductToTasting = async (req: Request, res: Response): Promise<
                 state: true
             }
         })
-    
-        if(userTastingProduct) throw new Exception("Product already in user tasting!", 400)
+
+        if (userTastingProduct) throw new Exception("Product already in user tasting!", 400)
 
         let startdate = new Date()
         let enddate = new Date(Date.now() + (30 * 24 * 60 * 60 * 1000));
-        
+
         const oneProductToTasting = new Tasting()
         oneProductToTasting.user = user
         oneProductToTasting.product = product
         oneProductToTasting.start_date = startdate
         oneProductToTasting.end_date = enddate
-        oneProductToTasting.price = Math.floor((product.price * product.discountTasting)/100)
+        oneProductToTasting.price = Math.floor((product.price * product.discountTasting) / 100)
         oneProductToTasting.state = true
         const newProductToTasting = getRepository(Tasting).create(oneProductToTasting)
         const results = await getRepository(Tasting).save(newProductToTasting).then(() => {
-            return res.json({ "message": "Product added successfully to Tasting!"})
+            return res.json({ "message": "Product added successfully to Tasting!" })
         })
-    }else throw new Exception("You cannot taste any more wines at the moment",400)
+    } else throw new Exception("You cannot taste any more wines at the moment", 400)
 
     return res.json({ "message": "Tasting not updated" })
 }
@@ -528,32 +529,32 @@ export const getTasting = async (req: Request, res: Response): Promise<Response>
     const { userid } = req.params
     const userRepo = getRepository(User)
     const productRepo = getRepository(Product)
-    const tastingRepo = getRepository(Tasting)    
+    const tastingRepo = getRepository(Tasting)
     const user = await userRepo.findOne({ where: { id: userid } })
-   
-    if (!userid) throw new Exception("Please specify a user id in url", 400)    
-    
-    if (!user) throw new Exception("User not found",400)
+
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
+
+    if (!user) throw new Exception("User not found", 400)
 
     const userTastingProduct = await tastingRepo.find({
         relations: ['product'],
-        where: {            
+        where: {
             user: user,
             state: true
         }
     })
-    
-    if(userTastingProduct.length) {
+
+    if (userTastingProduct.length) {
         return res.json(userTastingProduct)
     }
-    else throw new Exception("The user is not tasting products",400)
+    else throw new Exception("The user is not tasting products", 400)
 
     return res.json({ "message": "Nothing to do" })
 }
 
 export const createCompany = async (req: Request, res: Response): Promise<Response> => {
-    const { name, address, phone_1, phone_2, site_url } = req.body    
-    const {storeid} = req.params
+    const { name, address, phone_1, phone_2, site_url } = req.body
+    const { storeid } = req.params
     if (!name) throw new Exception("Please provide a company name")
     if (!address) throw new Exception("Please provide a address")
     if (!phone_1) throw new Exception("Please provide a phone_1")
@@ -561,11 +562,11 @@ export const createCompany = async (req: Request, res: Response): Promise<Respon
     if (!site_url) throw new Exception("Please provide a site url")
     const storeRepo = getRepository(Store)
     const companyRepo = getRepository(Company)
-    const store = await storeRepo.findOne({where:{id:storeid}})
-    const company = await companyRepo.findOne({ where: { name: req.body.name, site_url:req.body.site_url } })
-    if (!storeid) throw new Exception("Please specify a company id in url", 400)    
-    if (company) throw new Exception("Company name already exists",400)
-    if (!store) throw new Exception("Store not exists!",400)
+    const store = await storeRepo.findOne({ where: { id: storeid } })
+    const company = await companyRepo.findOne({ where: { name: req.body.name, site_url: req.body.site_url } })
+    if (!storeid) throw new Exception("Please specify a company id in url", 400)
+    if (company) throw new Exception("Company name already exists", 400)
+    if (!store) throw new Exception("Store not exists!", 400)
     let oneCompany = new Company()
     oneCompany.name = name
     oneCompany.address = address
@@ -579,21 +580,21 @@ export const createCompany = async (req: Request, res: Response): Promise<Respon
 }
 
 export const createStore = async (req: Request, res: Response): Promise<Response> => {
-    const { name, address, phone_1, phone_2 } = req.body    
+    const { name, address, phone_1, phone_2 } = req.body
     if (!name) throw new Exception("Please provide a company name")
     if (!address) throw new Exception("Please provide a address")
     if (!phone_1) throw new Exception("Please provide a phone_1")
     if (!phone_2) throw new Exception("Please provide a phone_2")
-    
+
     const storeRepo = getRepository(Store)
     const store = await storeRepo.findOne({ where: { name: req.body.name } })
     if (store) throw new Exception("Store name already exists")
     let oneStore = new Store();
-    oneStore.name = name;    
+    oneStore.name = name;
     oneStore.address = address;
     oneStore.phone_1 = phone_1;
     oneStore.phone_2 = phone_2;
-    
+
     const newStore = storeRepo.create(oneStore);
     const results = await storeRepo.save(newStore);
     return res.json(results);
@@ -621,8 +622,8 @@ export const delProductToTasting = async (req: Request, res: Response): Promise<
         }
     })
 
-    if(!userFavoriteProduct) throw new Exception("Product not exists in your Tasting!", 400)
-    
+    if (!userFavoriteProduct) throw new Exception("Product not exists in your Tasting!", 400)
+
     await tastingRepo.remove(userFavoriteProduct).then(() => {
         return res.json({ "message": "Product remove successfully to tasting" })
     })
@@ -631,30 +632,91 @@ export const delProductToTasting = async (req: Request, res: Response): Promise<
 }
 
 export const createEvent = async (req: Request, res: Response): Promise<Response> => {
-    const { title, description, start_date, end_date, link_zoom } = req.body    
+    const { title, description, start_date, end_date, link_zoom } = req.body
+    const { productid } = req.params
+    const productRepo = getRepository(Product)
+    const product = await productRepo.findOne({ where: { id: productid } })
+    if (!productid) throw new Exception("Please specify a product id in url", 400)
+    if (!product) throw new Exception("Product not exist!")
     if (!title) throw new Exception("Please provide a name for the event")
     if (!description) throw new Exception("Please provide a description")
     if (!start_date) throw new Exception("Please provide a start date for the event")
     if (!end_date) throw new Exception("Please provide a end date for the event")
     if (!link_zoom) throw new Exception("Please provide a link of zoom meeting")
-    
+
     const eventRepo = getRepository(Event)
     const event = await eventRepo.findOne({ where: { title: title } })
     if (event) throw new Exception("Event title already exists")
-    
+
     let oneEvent = new Event();
-    oneEvent.title = title;    
+    oneEvent.title = title;
     oneEvent.description = description;
     oneEvent.start_date = start_date;
     oneEvent.end_date = end_date;
     oneEvent.link_zoom = link_zoom
-    
+    oneEvent.product = product
     const newEvent = eventRepo.create(oneEvent);
     const results = await eventRepo.save(newEvent);
     return res.json(results);
 }
 
-export const getEvents = async (req: Request, res: Response): Promise<Response> => {               
-     const events = await getRepository(Event).find({ select: ["id", "title", "description", "start_date", "end_date", "link_zoom"] });
+export const getEvents = async (req: Request, res: Response): Promise<Response> => {
+    const events = await getRepository(Event).find({
+        relations: ['product']
+    });
+    return res.json(events);
+}
+
+export const addUserToEvent = async (req: Request, res: Response): Promise<Response> => {
+    const { userid, eventid } = req.params
+    const userRepo = getRepository(User)
+    const eventRepo = getRepository(Event)
+    const eventUserRepo = getRepository(EventUser)
+
+    const event = await eventRepo.findOne({ where: { id: eventid } })
+    const user = await userRepo.findOne({ where: { id: userid } })
+
+
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
+    if (!eventid) throw new Exception("Please specify an event id in url", 400)
+
+    if (!event) throw new Exception("Product not exist!", 400)
+    if (!user) throw new Exception("User not found", 400)
+
+
+    const eventUser = await eventUserRepo.findOne({
+        relations: ['user', 'event'],
+        where: {
+            event: event,
+            user: user
+        }
+    })
+
+    if (eventUser) throw new Exception("User already in Event", 400)
+
+
+
+    const oneEventUser = new EventUser()
+    oneEventUser.user = user
+    oneEventUser.event = event
+    const newEventUser = getRepository(EventUser).create(oneEventUser)
+    const results = await getRepository(EventUser).save(newEventUser).then(() => {
+        return res.json({ "message": "User added successfully to Event!" })
+    })
+
+
+    return res.json({ "message": "EventUser not updated" })
+}
+
+export const getEventUser = async (req: Request, res: Response): Promise<Response> => {
+    const { userid } = req.params
+    const userRepo = getRepository(User)
+    const user = await userRepo.findOne({ where: { id: userid } })
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
+     if (!user) throw new Exception("User not found", 400)
+    const events = await getRepository(EventUser).find({                
+        relations: ['event', 'user'],                
+        where: { user: user}        
+    });
     return res.json(events);
 }
