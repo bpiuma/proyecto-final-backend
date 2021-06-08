@@ -1,7 +1,8 @@
 import {
-    Entity, Column, PrimaryGeneratedColumn, BaseEntity, OneToMany,
+    Entity, Column, PrimaryGeneratedColumn, BaseEntity, OneToMany, OneToOne, JoinColumn,
 } from 'typeorm';
-import { EventUserProduct } from './EventUserProduct';
+import { EventUser } from './EventUser';
+import { Product } from './Product';
 
 @Entity()
 export class Event extends BaseEntity {
@@ -23,7 +24,11 @@ export class Event extends BaseEntity {
     @Column()
     link_zoom: string;
 
-    @OneToMany(() => EventUserProduct, eventUserProduct => eventUserProduct.event)
-    userProduct: EventUserProduct[];
+    @OneToMany(() => EventUser, eventUser => eventUser.event)
+    users: EventUser[];
+
+    @OneToOne(() => Product)
+    @JoinColumn()
+    product: Product;
 
 }

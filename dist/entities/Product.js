@@ -30,7 +30,6 @@ var Company_1 = require("./Company");
 var UserFavoriteProduct_1 = require("./UserFavoriteProduct");
 var Tasting_1 = require("./Tasting");
 var Cart_1 = require("./Cart");
-var EventUserProduct_1 = require("./EventUserProduct");
 var Product = /** @class */ (function (_super) {
     __extends(Product, _super);
     function Product() {
@@ -116,10 +115,6 @@ var Product = /** @class */ (function (_super) {
         typeorm_1.OneToMany(function () { return Cart_1.Cart; }, function (cart) { return cart.product; }, { cascade: true }),
         __metadata("design:type", Array)
     ], Product.prototype, "carts");
-    __decorate([
-        typeorm_1.OneToMany(function () { return EventUserProduct_1.EventUserProduct; }, function (eventUserProduct) { return eventUserProduct.product; }, { cascade: true }),
-        __metadata("design:type", Array)
-    ], Product.prototype, "eventUser");
     Product = __decorate([
         typeorm_1.Entity()
     ], Product);

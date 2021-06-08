@@ -48,7 +48,7 @@ var typeorm_1 = require("typeorm");
 var UserFavoriteProduct_1 = require("./UserFavoriteProduct");
 var Tasting_1 = require("./Tasting");
 var Cart_1 = require("./Cart");
-var EventUserProduct_1 = require("./EventUserProduct");
+var EventUser_1 = require("./EventUser");
 var bcrypt = __importStar(require("bcryptjs"));
 var class_validator_1 = require("class-validator");
 var User = /** @class */ (function (_super) {
@@ -112,9 +112,9 @@ var User = /** @class */ (function (_super) {
         __metadata("design:type", Array)
     ], User.prototype, "carts");
     __decorate([
-        typeorm_1.OneToMany(function () { return EventUserProduct_1.EventUserProduct; }, function (eventUserProduct) { return eventUserProduct.user; }),
+        typeorm_1.OneToMany(function () { return EventUser_1.EventUser; }, function (eventUser) { return eventUser.user; }),
         __metadata("design:type", Array)
-    ], User.prototype, "eventProduct");
+    ], User.prototype, "events");
     User = __decorate([
         typeorm_1.Entity()
     ], User);
