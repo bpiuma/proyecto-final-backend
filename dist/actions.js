@@ -44,8 +44,8 @@ var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la bas
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
 var utils_1 = require("./utils");
-var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-var cross_fetch_1 = __importDefault(require("cross-fetch"));
+var jsonwebtoken_1 = __importDefault(require("jsonwebtoken")); //importamos json web token para poder firmar los datos del usuario y generar un token valido
+var cross_fetch_1 = __importDefault(require("cross-fetch")); //importamos cross-fetch para poder traer desde una api externa los datos
 var Cart_1 = require("./entities/Cart");
 var UserFavoriteProduct_1 = require("./entities/UserFavoriteProduct");
 var passRecovery_1 = require("./emailTemplates/passRecovery");
@@ -54,8 +54,13 @@ var Company_1 = require("./entities/Company");
 var Store_1 = require("./entities/Store");
 var Event_1 = require("./entities/Event");
 var EventUser_1 = require("./entities/EventUser");
-var image_finder = require('image-search-engine');
-exports.refreshTokens = [];
+var image_finder = require('image-search-engine'); //importamos image_finder para poder traer la imagen de los productos desde la api google sin tener una key
+exports.refreshTokens = []; //esta variable se utiliza para guardar las sesiones validas del sitio
+/*
+CreateUser: Metodo que devuelve una promesa, es utilizado para crear el usuario al registrarse en el sitio
+Recibe por POST, datos personales y si esos datos son validos, los guarda en la base de datos.
+Devuelve mensaje de exito si el usuario fue insertado en la bd satisfactoriamente.
+*/
 var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth, userRepo, user, oneUser, newUser, results;
     return __generator(this, function (_b) {
@@ -79,8 +84,7 @@ var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
                     throw new utils_1.Exception("Please provide a phone_2");
                 if (!date_of_birth)
                     throw new utils_1.Exception("Please provide a date_of_birth");
-                // validación del formato de password
-                console.log("largo: ", password.length);
+                // validación del formato de password    
                 if (!validatePassword(password))
                     throw new utils_1.Exception("Please provide a valid password");
                 // validacion del formato de email
@@ -106,11 +110,15 @@ var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
                 return [4 /*yield*/, userRepo.save(newUser)];
             case 2:
                 results = _b.sent();
-                return [2 /*return*/, res.json(results)];
+                return [2 /*return*/, res.json({ "message": "User created successfully" })];
         }
     });
 }); };
 exports.createUser = createUser;
+/*
+GetUsers: Método que devuelve una promesa, es utilizado para devolver los datos del usuario registrado,
+menos la password para que puedan ser utilizados en el sitio.
+*/
 var getUsers = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var users;
     return __generator(this, function (_a) {
@@ -123,6 +131,10 @@ var getUsers = function (req, res) { return __awaiter(void 0, void 0, void 0, fu
     });
 }); };
 exports.getUsers = getUsers;
+/*
+GetProducts: Método que devuelve una promesa, es utilizado para devolver los datos de los productos de la tienda,
+ordenados por el puntaje obtenido a nivel internacional por los catadores de los vinos, de mayor a menor.
+*/
 var getProducts = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var products;
     return __generator(this, function (_a) {
@@ -135,8 +147,29 @@ var getProducts = function (req, res) { return __awaiter(void 0, void 0, void 0,
     });
 }); };
 exports.getProducts = getProducts;
+/*
+CreateProducts: Método que devuelve una promesa, es utilizado para dar de alta productos en la tienda
+Recibe una url de donde sacar los productos, y una companyid para anexarle esos productos a la compañia
+Adicionalmente la estructura de datos recibidos tienen que tener la siguiente información:
+    points:                number;
+    title:                 string;
+    description:           string;
+    taster_name:           TasterName | null;
+    taster_twitter_handle: TasterTwitterHandle | null;
+    price:                 number | null;
+    designation:           null | string;
+    variety:               string;
+    region_1:              null | string;
+    region_2:              null | string;
+    province:              string;
+    country:               Country;
+    winery:                string;
+Se añaden a esto los campos company e image, este ultimo se trae utilizando el servicio de google images para
+obtener la misma en base al titulo del producto.
+Devuelve un mensaje de exito si los productos fueron insertados correctamente.
+*/
 var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var baseURL, companyid, companyRepo, company, fetchProductsData, r;
+    var baseURL, companyid, companyRepo, company, fetchProductsData;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -155,8 +188,7 @@ var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, 
                             'Content-Type': 'application/json',
                             'Accept': 'application/json'
                         }
-                    })
-                        .then(function (res) { return __awaiter(void 0, void 0, void 0, function () {
+                    }).then(function (res) { return __awaiter(void 0, void 0, void 0, function () {
                         var responseJson;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
@@ -170,8 +202,7 @@ var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, 
                                     return [2 /*return*/, responseJson.results];
                             }
                         });
-                    }); })
-                        .then(function (product) { return __awaiter(void 0, void 0, void 0, function () {
+                    }); }).then(function (product) { return __awaiter(void 0, void 0, void 0, function () {
                         return __generator(this, function (_a) {
                             product.map(function (item, index) { return __awaiter(void 0, void 0, void 0, function () {
                                 var _a, newProduct, results;
@@ -196,10 +227,12 @@ var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, 
                                             req.body.country = item.country;
                                             req.body.winery = item.winery;
                                             req.body.company = company;
-                                            newProduct = typeorm_1.getRepository(Product_1.Product).create(req.body);
-                                            return [4 /*yield*/, typeorm_1.getRepository(Product_1.Product).save(newProduct)];
+                                            newProduct = typeorm_1.getRepository(Product_1.Product).create(req.body) //Creo por cada iteración el producto
+                                            ;
+                                            return [4 /*yield*/, typeorm_1.getRepository(Product_1.Product).save(newProduct)]; //Grabo el nuevo personaje              
                                         case 2:
-                                            results = _b.sent();
+                                            results = _b.sent() //Grabo el nuevo personaje              
+                                            ;
                                             return [2 /*return*/];
                                     }
                                 });
@@ -211,15 +244,19 @@ var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, 
                     })];
             case 2:
                 fetchProductsData = _a.sent();
-                r = {
-                    message: "All Products are created",
-                    state: true
-                };
-                return [2 /*return*/, res.json(r)];
+                return [2 /*return*/, res.json({ "message": "Products created succefully" })];
         }
     });
 }); };
 exports.createBaseProducts = createBaseProducts;
+/*
+Login: Método que devuelve una promesa, es utilizado para loguear en el sitio a un usuario registrado
+Recibe un usuario(email) y password, valida ambas entradas y devuelve un mensaje en caso de error, si
+se obtuvo exito en la validación, verifica que el usuario exista y que la password sea la de usuario,
+esta se guarda en la base de datos encriptada, por lo que se encripta la password ingresada por el usuario
+y se compara con el hash de password que hay guardado en la base de datos, si todo ok, se encriptan los datos del usuario
+con JWT y se devuelven en un token, ademas de guardar una cookie de sesión.-
+*/
 var login = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, email, password, userRepo, user, token;
     return __generator(this, function (_b) {
@@ -264,6 +301,11 @@ var buscarImg = function (req, res) { return __awaiter(void 0, void 0, void 0, f
     });
 }); };
 exports.buscarImg = buscarImg;
+/*
+Logout: Método que devuelve una promesa, es utilizado para desloguear un usuario del sistema,
+recibe un token, lo filtra de los tokens dados en cada login y lo elimina del sistema, devolviendo un
+mensaje acorde. Tambien limpia la cookie del mismo.
+*/
 var logout = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var token;
     return __generator(this, function (_a) {
@@ -276,7 +318,7 @@ var logout = function (req, res) { return __awaiter(void 0, void 0, void 0, func
 exports.logout = logout;
 // funcion para validar el formato del email
 var validateEmail = function (email) {
-    var res = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    var res = /^(([^<>()[\]\\.,:\s@\"]+(\.[^<>()[\]\\.,:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return res.test(email);
 };
 // funcion para validar el formato del password
@@ -298,6 +340,11 @@ var validatePassword = function (pass) {
     }
     return false;
 };
+/*
+ResetPassword: Método que devuelve una promesa, es utilizado para resetear la passwor de un usuario,
+recibe el id del usuario, la password antigua y la nueva password, valida que todo este correcto y que
+coincidan las password y devuelve un mensaje de password actualizada, de lo contrario tira error según corresponda
+*/
 var resetPassword = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var userid, _a, oldPassword, newPassword, userRepo, user, userPassword, results;
     return __generator(this, function (_b) {
@@ -324,7 +371,7 @@ var resetPassword = function (req, res) { return __awaiter(void 0, void 0, void 
                 userPassword = new User_1.User();
                 userPassword.password = newPassword;
                 userPassword.hashPassword();
-                return [4 /*yield*/, userRepo.update(user, userPassword).then(function () { return res.json("passord updated!"); })];
+                return [4 /*yield*/, userRepo.update(user, userPassword).then(function () { return res.json("Password Updated!"); })];
             case 2:
                 results = _b.sent();
                 return [2 /*return*/, res.json(results)];
@@ -332,6 +379,12 @@ var resetPassword = function (req, res) { return __awaiter(void 0, void 0, void 
     });
 }); };
 exports.resetPassword = resetPassword;
+/*
+UpdateUser: Método que devuelve una promesa, es utilizado para actualizar la información del usuario
+Recibe los datos básicos a actualizar del usuario, el identificador del usuario, y si lo encuentra
+actualiza la base de datos, de lo contrario si hay algun dato del usuario, como por ejemplo del email que
+se repitan en el sistema, le envia un mensaje de error.
+*/
 var updateUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, first_name, last_name, email, address, phone_1, phone_2, date_of_birth, userRepo, user, user2, users;
     return __generator(this, function (_b) {
@@ -367,11 +420,15 @@ var updateUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
                 return [4 /*yield*/, userRepo.save(user)];
             case 4:
                 users = _b.sent();
-                return [2 /*return*/, res.json(users)];
+                return [2 /*return*/, res.json({ "message": "User updated successfully" })];
         }
     });
 }); };
 exports.updateUser = updateUser;
+/*
+GetUserById: Método que devuelve una promesa, es utilizado para devolver un usuario, recibe un userid y
+devuelve todos los datos del usuario menos la password.
+*/
 var getUserById = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var user;
     return __generator(this, function (_a) {
@@ -389,6 +446,10 @@ var getUserById = function (req, res) { return __awaiter(void 0, void 0, void 0,
     });
 }); };
 exports.getUserById = getUserById;
+/*
+DeleteUser: Método que devuelve una promesa, es utilizado para borrar un usuario, recibe un user id y
+devuelve un mensaje acorde a la acción si se pudo eliminar el usuario.
+*/
 var deleteUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var userRepo, user;
     return __generator(this, function (_a) {
@@ -411,6 +472,13 @@ var deleteUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
     });
 }); };
 exports.deleteUser = deleteUser;
+/*
+AddProductToCart: Método que devuelve una promesa, es utilizado para agregar un producto al carrito de
+compras, recibe el id del usuario, un producto id y una cantidad a agregar, valida que todos los datos
+sean correctos incrementa la cantidad de ese producto en el carrito, y el importe del mismo, se realizan
+dos acciones al recibir los datos, si el producto no existe en el carrito lo agrega y si existe lo actualiza
+y devuelve un mensaje acorde a la acción solicitada.-
+*/
 var addProductToCart = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, userid, productid, cant, userRepo, productRepo, cartRepo, product, user, userCartProduct, oneProductToCart, newProductToCart, results;
     return __generator(this, function (_b) {
@@ -473,6 +541,12 @@ var addProductToCart = function (req, res) { return __awaiter(void 0, void 0, vo
     });
 }); };
 exports.addProductToCart = addProductToCart;
+/*
+SubProductToCart: Método que devuelve una promesa, es utilizado para restar una cantidad de un producto
+del carrito de un usuario, recibe un usuario id, un producto id y una cantidad, valida todos estos datos y resta esa cantidad de producto
+en el carrito actualizando tambien el importe del mismo. Si el producto llega a cero, elimina el producto del
+carrito, y devuelve un mensaje acorde a la acción solicitada.
+*/
 var subProductToCart = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, userid, productid, cant, userRepo, productRepo, cartRepo, product, user, userCartProduct;
     return __generator(this, function (_b) {
@@ -531,6 +605,12 @@ var subProductToCart = function (req, res) { return __awaiter(void 0, void 0, vo
     });
 }); };
 exports.subProductToCart = subProductToCart;
+/**
+ * DelProductToCart: Método que devuelve una promesa, es utilizado para borrar un producto
+ * del carrito de compras, recibe un id de usuario y un id de producto, valida los datos
+ * recibidos, y borra el producto del carrito del usuario, y devuelve un mensaje acorde
+ * a la acción solicitada.
+ */
 var delProductToCart = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, userid, productid, userRepo, productRepo, cartRepo, product, user, userCartProduct;
     return __generator(this, function (_b) {
@@ -576,6 +656,10 @@ var delProductToCart = function (req, res) { return __awaiter(void 0, void 0, vo
     });
 }); };
 exports.delProductToCart = delProductToCart;
+/*
+GetCart: Método que devuelve una promesa, es utilizado para devolver el carrito de compras
+de un usuario, recibe el usuario id, valida todos los datos y devuelve el carrito de compra
+*/
 var getCart = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var userid, userRepo, cartRepo, user, userCartProduct, total_1, totalAmount;
     return __generator(this, function (_a) {
@@ -613,6 +697,12 @@ var getCart = function (req, res) { return __awaiter(void 0, void 0, void 0, fun
     });
 }); };
 exports.getCart = getCart;
+/*
+PasswordRecovery: Método que devuelve una promesa, es utilizado para recuperar la password
+de un usuario, se recibe un email, valida que exista el correo, y envia un email al usuario
+con un link y token valido para que pueda resetear su contraseña. Devuele un mensaje acorde a
+la acción solicitada.
+*/
 var passwordRecovery = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var userRepo, user, token, userName;
     return __generator(this, function (_a) {
@@ -633,6 +723,12 @@ var passwordRecovery = function (req, res) { return __awaiter(void 0, void 0, vo
     });
 }); };
 exports.passwordRecovery = passwordRecovery;
+/*
+AddProductToFavorite: Método que devuelve una promesa, es utilizado para agregar un producto a la lista de
+favoritos del usuario, recibe un usuario id y un producto id, valida todos los datos y si el producto esta
+en la lista de favoritos, no lo agrega y le avisa al usuario, sino lo agrega y avisa al usuario con un mensaje
+acorde a la acción solicitada.
+*/
 var addProductToFavorite = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, userid, productid, userRepo, productRepo, favoriteRepo, product, user, userFavoriteProduct, oneProductToFavorite, newProductToFavorite, results;
     return __generator(this, function (_b) {
@@ -681,6 +777,10 @@ var addProductToFavorite = function (req, res) { return __awaiter(void 0, void 0
     });
 }); };
 exports.addProductToFavorite = addProductToFavorite;
+/*
+GetFavorites: Método que devuelve una promesa, es utilizado para obtener la lista de favoritos del
+usuario, recibe un usuario id, valida todos los datos y devuelve la lista de productos.
+*/
 var getFavorites = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var userid, userRepo, favoriteRepo, user, userFavoriteProduct;
     return __generator(this, function (_a) {
@@ -714,6 +814,12 @@ var getFavorites = function (req, res) { return __awaiter(void 0, void 0, void 0
     });
 }); };
 exports.getFavorites = getFavorites;
+/*
+DelProductToFavorite: Método que devuelve una promesa, es utilizado para borrar un producto
+de la lista de favoritos del usuario, recibe un usuario id y un producto id, valida los datos
+recibidos, y si todo ok, borra el producto de la lista de favoritos y devuelve mensaje acorde
+a la solicitud recibida.
+*/
 var delProductToFavorite = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, userid, productid, userRepo, productRepo, favoriteRepo, product, user, userFavoriteProduct;
     return __generator(this, function (_b) {
@@ -758,6 +864,15 @@ var delProductToFavorite = function (req, res) { return __awaiter(void 0, void 0
     });
 }); };
 exports.delProductToFavorite = delProductToFavorite;
+/*
+AddProductToTasting: Método que devuelve una promesa, es utilizado para agregar un producto a la
+lista de degustación del usuario, recibe un usuario id y un producto id, valida los datos recibidos,
+de los datos obtenidos en base a los datos ingresados, se establece una fecha de comienzo y un fecha de
+fin de la degustación, la cual el usuario puede degustar hasta 3 vinos simultaneamente, a un precio
+de cada producto en base a un descuento establecido por la empresa dueña de los productos, la degustación
+esta pensada para que un usuario reciba los vinos a degustar en botellas mas pequeñas y pueda decidir
+si comprar el producto en su envase normal.
+*/
 var addProductToTasting = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, userid, productid, userRepo, productRepo, tastingRepo, product, user, productToTasting, productCount, userTastingProduct, startdate, enddate, oneProductToTasting, newProductToTasting, results;
     return __generator(this, function (_b) {
@@ -820,6 +935,10 @@ var addProductToTasting = function (req, res) { return __awaiter(void 0, void 0,
     });
 }); };
 exports.addProductToTasting = addProductToTasting;
+/*
+GetTasting: Método que devuelve una promesa, es utilizada para obtener la lista de degustación
+del usuario, devolviendo la lista de productos.
+*/
 var getTasting = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var userid, userRepo, productRepo, tastingRepo, user, userTastingProduct;
     return __generator(this, function (_a) {
@@ -855,6 +974,11 @@ var getTasting = function (req, res) { return __awaiter(void 0, void 0, void 0, 
     });
 }); };
 exports.getTasting = getTasting;
+/*
+CreateCompany: Método que devuelve una promesa, es utilizado para crear una compañia y
+anexarla a la tienda, recibe datos de la empresa, los valida y devuelve mensaje acorde a
+la solicitud recibida.
+*/
 var createCompany = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, name, address, phone_1, phone_2, site_url, storeid, storeRepo, companyRepo, store, company, oneCompany, newCompany, results;
     return __generator(this, function (_b) {
@@ -897,11 +1021,16 @@ var createCompany = function (req, res) { return __awaiter(void 0, void 0, void 
                 return [4 /*yield*/, companyRepo.save(newCompany)];
             case 3:
                 results = _b.sent();
-                return [2 /*return*/, res.json(results)];
+                return [2 /*return*/, res.json({ "message": "Company created successfully" })];
         }
     });
 }); };
 exports.createCompany = createCompany;
+/*
+CreateStore: Método que devuelve una promesa, es utilizado para crear una tienda, recibe
+los datos básicos de la tienda, los valida y devuelve mensaje acorde a la solicitud
+recibida.
+*/
 var createStore = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, name, address, phone_1, phone_2, storeRepo, store, oneStore, newStore, results;
     return __generator(this, function (_b) {
@@ -931,11 +1060,17 @@ var createStore = function (req, res) { return __awaiter(void 0, void 0, void 0,
                 return [4 /*yield*/, storeRepo.save(newStore)];
             case 2:
                 results = _b.sent();
-                return [2 /*return*/, res.json(results)];
+                return [2 /*return*/, res.json({ "message": "Store created successfully" })];
         }
     });
 }); };
 exports.createStore = createStore;
+/*
+DelProductToTasting: Método que devuelve una promesa, es utilizado para borrar un producto
+de la lista de degustación del usuario, recibe un usuario id y producto id, los valida y
+borra el producto de la lista de degustación, devuelve un mensaje acorde a la solicitud
+recibida.
+*/
 var delProductToTasting = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, userid, productid, userRepo, productRepo, tastingRepo, product, user, userFavoriteProduct;
     return __generator(this, function (_b) {
@@ -980,6 +1115,13 @@ var delProductToTasting = function (req, res) { return __awaiter(void 0, void 0,
     });
 }); };
 exports.delProductToTasting = delProductToTasting;
+/*
+CreateEvent: Método que devuelve una promesa, es utilizado para crear un evento
+de degustación de un determinado producto al cual un usuario puede agendarse y
+ver la degustación de ese producto en vivo a traves de un link de zoom. Recibe
+los datos del evento, un producto id, los valida crea el evento, y devuelve
+un mensaje acorde a la solicitud recibida.
+*/
 var createEvent = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, title, description, start_date, end_date, link_zoom, productid, productRepo, product, eventRepo, event, oneEvent, newEvent, results;
     return __generator(this, function (_b) {
@@ -1022,11 +1164,15 @@ var createEvent = function (req, res) { return __awaiter(void 0, void 0, void 0,
                 return [4 /*yield*/, eventRepo.save(newEvent)];
             case 3:
                 results = _b.sent();
-                return [2 /*return*/, res.json(results)];
+                return [2 /*return*/, res.json({ "message": "Event created successfully" })];
         }
     });
 }); };
 exports.createEvent = createEvent;
+/*
+GetEvents: Método que devuelve una promesa, es utilizado para devolver una lista de eventos
+y los productos que se presentaran en cada evento.
+*/
 var getEvents = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var events;
     return __generator(this, function (_a) {
@@ -1041,6 +1187,11 @@ var getEvents = function (req, res) { return __awaiter(void 0, void 0, void 0, f
     });
 }); };
 exports.getEvents = getEvents;
+/*
+AddUserToEvent: Método que devuelve una promesa, es utilizado para agregar un usuario a un evento
+recibe, un usuario id y un evento id, valida los datos recibidos, y añade un usuario a ese evento
+devuelve un mensaje acorde a la solicitud recibida.
+ */
 var addUserToEvent = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, userid, eventid, userRepo, eventRepo, eventUserRepo, event, user, eventUser, oneEventUser, newEventUser, results;
     return __generator(this, function (_b) {
@@ -1089,6 +1240,11 @@ var addUserToEvent = function (req, res) { return __awaiter(void 0, void 0, void
     });
 }); };
 exports.addUserToEvent = addUserToEvent;
+/*
+GetEventUser: Método que devuelve una promesa, es utilizado para obtener los eventos a los
+que se inscribió un usuario, recibe un usuario id, valida los datos y devuelve una lista
+de eventos del usuario.
+*/
 var getEventUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var userid, userRepo, user, events;
     return __generator(this, function (_a) {
