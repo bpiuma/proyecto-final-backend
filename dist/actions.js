@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.getEvents = exports.createEvent = exports.delProductToTasting = exports.createStore = exports.createCompany = exports.getTasting = exports.addProductToTasting = exports.delProductToFavorite = exports.getFavorites = exports.addProductToFavorite = exports.passwordRecovery = exports.getCart = exports.delProductToCart = exports.subProductToCart = exports.addProductToCart = exports.deleteUser = exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
+exports.getEventUser = exports.addUserToEvent = exports.getEvents = exports.createEvent = exports.delProductToTasting = exports.createStore = exports.createCompany = exports.getTasting = exports.addProductToTasting = exports.delProductToFavorite = exports.getFavorites = exports.addProductToFavorite = exports.passwordRecovery = exports.getCart = exports.delProductToCart = exports.subProductToCart = exports.addProductToCart = exports.deleteUser = exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
@@ -53,6 +53,7 @@ var Tasting_1 = require("./entities/Tasting");
 var Company_1 = require("./entities/Company");
 var Store_1 = require("./entities/Store");
 var Event_1 = require("./entities/Event");
+var EventUser_1 = require("./entities/EventUser");
 var image_finder = require('image-search-engine');
 exports.refreshTokens = [];
 var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
@@ -980,11 +981,20 @@ var delProductToTasting = function (req, res) { return __awaiter(void 0, void 0,
 }); };
 exports.delProductToTasting = delProductToTasting;
 var createEvent = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, title, description, start_date, end_date, link_zoom, eventRepo, event, oneEvent, newEvent, results;
+    var _a, title, description, start_date, end_date, link_zoom, productid, productRepo, product, eventRepo, event, oneEvent, newEvent, results;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
                 _a = req.body, title = _a.title, description = _a.description, start_date = _a.start_date, end_date = _a.end_date, link_zoom = _a.link_zoom;
+                productid = req.params.productid;
+                productRepo = typeorm_1.getRepository(Product_1.Product);
+                return [4 /*yield*/, productRepo.findOne({ where: { id: productid } })];
+            case 1:
+                product = _b.sent();
+                if (!productid)
+                    throw new utils_1.Exception("Please specify a product id in url", 400);
+                if (!product)
+                    throw new utils_1.Exception("Product not exist!");
                 if (!title)
                     throw new utils_1.Exception("Please provide a name for the event");
                 if (!description)
@@ -997,7 +1007,7 @@ var createEvent = function (req, res) { return __awaiter(void 0, void 0, void 0,
                     throw new utils_1.Exception("Please provide a link of zoom meeting");
                 eventRepo = typeorm_1.getRepository(Event_1.Event);
                 return [4 /*yield*/, eventRepo.findOne({ where: { title: title } })];
-            case 1:
+            case 2:
                 event = _b.sent();
                 if (event)
                     throw new utils_1.Exception("Event title already exists");
@@ -1007,9 +1017,10 @@ var createEvent = function (req, res) { return __awaiter(void 0, void 0, void 0,
                 oneEvent.start_date = start_date;
                 oneEvent.end_date = end_date;
                 oneEvent.link_zoom = link_zoom;
+                oneEvent.product = product;
                 newEvent = eventRepo.create(oneEvent);
                 return [4 /*yield*/, eventRepo.save(newEvent)];
-            case 2:
+            case 3:
                 results = _b.sent();
                 return [2 /*return*/, res.json(results)];
         }
@@ -1020,7 +1031,9 @@ var getEvents = function (req, res) { return __awaiter(void 0, void 0, void 0, f
     var events;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, typeorm_1.getRepository(Event_1.Event).find({ select: ["id", "title", "description", "start_date", "end_date", "link_zoom"] })];
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(Event_1.Event).find({
+                    relations: ['product']
+                })];
             case 1:
                 events = _a.sent();
                 return [2 /*return*/, res.json(events)];
@@ -1028,3 +1041,76 @@ var getEvents = function (req, res) { return __awaiter(void 0, void 0, void 0, f
     });
 }); };
 exports.getEvents = getEvents;
+var addUserToEvent = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var _a, userid, eventid, userRepo, eventRepo, eventUserRepo, event, user, eventUser, oneEventUser, newEventUser, results;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = req.params, userid = _a.userid, eventid = _a.eventid;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                eventRepo = typeorm_1.getRepository(Event_1.Event);
+                eventUserRepo = typeorm_1.getRepository(EventUser_1.EventUser);
+                return [4 /*yield*/, eventRepo.findOne({ where: { id: eventid } })];
+            case 1:
+                event = _b.sent();
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 2:
+                user = _b.sent();
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!eventid)
+                    throw new utils_1.Exception("Please specify an event id in url", 400);
+                if (!event)
+                    throw new utils_1.Exception("Product not exist!", 400);
+                if (!user)
+                    throw new utils_1.Exception("User not found", 400);
+                return [4 /*yield*/, eventUserRepo.findOne({
+                        relations: ['user', 'event'],
+                        where: {
+                            event: event,
+                            user: user
+                        }
+                    })];
+            case 3:
+                eventUser = _b.sent();
+                if (eventUser)
+                    throw new utils_1.Exception("User already in Event", 400);
+                oneEventUser = new EventUser_1.EventUser();
+                oneEventUser.user = user;
+                oneEventUser.event = event;
+                newEventUser = typeorm_1.getRepository(EventUser_1.EventUser).create(oneEventUser);
+                return [4 /*yield*/, typeorm_1.getRepository(EventUser_1.EventUser).save(newEventUser).then(function () {
+                        return res.json({ "message": "User added successfully to Event!" });
+                    })];
+            case 4:
+                results = _b.sent();
+                return [2 /*return*/, res.json({ "message": "EventUser not updated" })];
+        }
+    });
+}); };
+exports.addUserToEvent = addUserToEvent;
+var getEventUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userid, userRepo, user, events;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userid = req.params.userid;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 1:
+                user = _a.sent();
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!user)
+                    throw new utils_1.Exception("User not found", 400);
+                return [4 /*yield*/, typeorm_1.getRepository(EventUser_1.EventUser).find({
+                        relations: ['event', 'user'],
+                        where: { user: user }
+                    })];
+            case 2:
+                events = _a.sent();
+                return [2 /*return*/, res.json(events)];
+        }
+    });
+}); };
+exports.getEventUser = getEventUser;

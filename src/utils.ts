@@ -37,7 +37,7 @@ export const renderIndex = async (_app: any, url: string) => {
 	let data = {
 		host: url,
 		routes,
-		rigo: "https://github.com/4GeeksAcademy/expressjs-rest-hello/blob/master/docs/assets/rigo-baby.jpeg?raw=true",
+		logo: "https://github.com/bpiuma/proyecto-final-backend/blob/develop/docs/assets/copaVino.png?raw=false",
 		starter: "https://start.4geeksacademy.com/starters/express",
 
 	}
