@@ -12,6 +12,10 @@ export const send_mail = (name: string, mail: string, token: string) => {
         }
     });
 
+    // reemplazamos todos los "." por "$"
+    let nToken = token.replace(".","$")
+    let newToken = nToken.replace(".","$")
+
     let mail_options = {
         from: 'wineandsenses@gmail.com',
         to: mail,
@@ -29,7 +33,7 @@ export const send_mail = (name: string, mail: string, token: string) => {
                 </tr>
                 <tr height="100px" bgcolor="">
                     <td style="color: #fff; text-align:center">
-                        <a href=${process.env.PASSWORD_RECOVERY_URL + token} class="button"
+                        <a href=${process.env.PASSWORD_RECOVERY_URL + newToken} class="button"
                                 style="
                                 background-color: #5E0000;
                                 border: none;
