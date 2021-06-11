@@ -32,6 +32,11 @@ export class User extends BaseEntity {
     checkIfUnencryptedPasswordIsValid(unencryptedPassword: string) {
         return bcrypt.compareSync(unencryptedPassword, this.password);
     }
+
+    checkIfEncryptedPasswordIsValid(encryptedPassword: string) {
+        return bcrypt.compare(encryptedPassword, this.password);
+    }
+
     @Column()
     address: string;
 
