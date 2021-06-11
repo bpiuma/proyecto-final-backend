@@ -59,10 +59,11 @@ exports.refreshTokens = []; //esta variable se utiliza para guardar las sesiones
 /*
 CreateUser: Metodo que devuelve una promesa, es utilizado para crear el usuario al registrarse en el sitio
 Recibe por POST, datos personales y si esos datos son validos, los guarda en la base de datos.
-Devuelve mensaje de exito si el usuario fue insertado en la bd satisfactoriamente.
+Si el usuario fue insertado en la bd satisfactoriamente, se encriptan los datos del usuario con JWT y se devuelven en un token,
+junto con un mensaje de exito.
 */
 var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth, userRepo, user, oneUser, newUser, results;
+    var _a, first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth, userRepo, user, oneUser, newUser, results, token;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -110,7 +111,9 @@ var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
                 return [4 /*yield*/, userRepo.save(newUser)];
             case 2:
                 results = _b.sent();
-                return [2 /*return*/, res.json({ "message": "User created successfully" })];
+                token = jsonwebtoken_1["default"].sign({ newUser: newUser }, process.env.JWT_KEY, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN });
+                exports.refreshTokens.push(token);
+                return [2 /*return*/, res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ "message": "User created successfully", token: token })];
         }
     });
 }); };
@@ -264,9 +267,9 @@ var login = function (req, res) { return __awaiter(void 0, void 0, void 0, funct
             case 0:
                 _a = req.body, email = _a.email, password = _a.password;
                 if (!email)
-                    throw new utils_1.Exception("Please specify an email on your request body", 400);
+                    throw new utils_1.Exception("Please specify an email", 400);
                 if (!password)
-                    throw new utils_1.Exception("Please specify a password on your request body", 400);
+                    throw new utils_1.Exception("Please specify a password", 400);
                 if (!validateEmail(email))
                     throw new utils_1.Exception("Please provide a valid email address", 400);
                 userRepo = typeorm_1.getRepository(User_1.User);
@@ -341,7 +344,7 @@ var validatePassword = function (pass) {
     return false;
 };
 /*
-ResetPassword: Método que devuelve una promesa, es utilizado para resetear la passwor de un usuario,
+ResetPassword: Método que devuelve una promesa, es utilizado para resetear la password de un usuario,
 recibe el id del usuario, la password antigua y la nueva password, valida que todo este correcto y que
 coincidan las password y devuelve un mensaje de password actualizada, de lo contrario tira error según corresponda
 */
@@ -371,7 +374,7 @@ var resetPassword = function (req, res) { return __awaiter(void 0, void 0, void 
                 userPassword = new User_1.User();
                 userPassword.password = newPassword;
                 userPassword.hashPassword();
-                return [4 /*yield*/, userRepo.update(user, userPassword).then(function () { return res.json("Password Updated!"); })];
+                return [4 /*yield*/, userRepo.update(user, userPassword).then(function () { return res.json({ "message": "Password Updated!" }); })];
             case 2:
                 results = _b.sent();
                 return [2 /*return*/, res.json(results)];

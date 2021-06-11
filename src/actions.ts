@@ -22,7 +22,8 @@ export let refreshTokens: any[] = [] //esta variable se utiliza para guardar las
 /*
 CreateUser: Metodo que devuelve una promesa, es utilizado para crear el usuario al registrarse en el sitio
 Recibe por POST, datos personales y si esos datos son validos, los guarda en la base de datos.
-Devuelve mensaje de exito si el usuario fue insertado en la bd satisfactoriamente.
+Si el usuario fue insertado en la bd satisfactoriamente, se encriptan los datos del usuario con JWT y se devuelven en un token,
+junto con un mensaje de exito.
 */
 export const createUser = async (req: Request, res: Response): Promise<Response> => {
     const { first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth } = req.body
@@ -55,13 +56,15 @@ export const createUser = async (req: Request, res: Response): Promise<Response>
     oneUser.date_of_birth = date_of_birth
     const newUser = userRepo.create(oneUser)
     const results = await userRepo.save(newUser)
-    return res.json({"message":"User created successfully"})
+    const token = jwt.sign({ newUser }, process.env.JWT_KEY as string, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN })
+    refreshTokens.push(token)
+    return res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ "message":"User created successfully", token })
 }
+
 /*
 GetUsers: Método que devuelve una promesa, es utilizado para devolver los datos del usuario registrado, 
 menos la password para que puedan ser utilizados en el sitio.
 */
-
 export const getUsers = async (req: Request, res: Response): Promise<Response> => {
     const users = await getRepository(User).find({ select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth"] })
     return res.json(users)
@@ -151,8 +154,8 @@ con JWT y se devuelven en un token, ademas de guardar una cookie de sesión.-
 */
 export const login = async (req: Request, res: Response): Promise<Response> => {
     let { email, password } = req.body
-    if (!email) throw new Exception("Please specify an email on your request body", 400)
-    if (!password) throw new Exception("Please specify a password on your request body", 400)
+    if (!email) throw new Exception("Please specify an email", 400)
+    if (!password) throw new Exception("Please specify a password", 400)
     if (!validateEmail(email)) throw new Exception("Please provide a valid email address", 400)
     const userRepo = getRepository(User)
     const user = await userRepo.findOne({
@@ -164,7 +167,6 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
     refreshTokens.push(token)
     return res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ token })
 }
-
 
 export const buscarImg = async (req: Request, res: Response) => {
     const { query } = req.body
@@ -209,7 +211,7 @@ const validatePassword = (pass: string) => {
 }
 
 /*
-ResetPassword: Método que devuelve una promesa, es utilizado para resetear la passwor de un usuario,
+ResetPassword: Método que devuelve una promesa, es utilizado para resetear la password de un usuario,
 recibe el id del usuario, la password antigua y la nueva password, valida que todo este correcto y que
 coincidan las password y devuelve un mensaje de password actualizada, de lo contrario tira error según corresponda
 */
@@ -227,7 +229,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<Respon
     const userPassword = new User()
     userPassword.password = newPassword
     userPassword.hashPassword()
-    const results = await userRepo.update(user, userPassword).then(() => { return res.json("Password Updated!") })
+    const results = await userRepo.update(user, userPassword).then(() => { return res.json({"message": "Password Updated!"})})
     return res.json(results)
 }
 
@@ -259,6 +261,7 @@ export const updateUser = async (req: Request, res: Response): Promise<Response>
     const users = await userRepo.save(user)
     return res.json({"message":"User updated successfully"})
 }
+
 /*
 GetUserById: Método que devuelve una promesa, es utilizado para devolver un usuario, recibe un userid y 
 devuelve todos los datos del usuario menos la password.
@@ -336,7 +339,6 @@ del carrito de un usuario, recibe un usuario id, un producto id y una cantidad, 
 en el carrito actualizando tambien el importe del mismo. Si el producto llega a cero, elimina el producto del 
 carrito, y devuelve un mensaje acorde a la acción solicitada.
 */
-
 export const subProductToCart = async (req: Request, res: Response): Promise<Response> => {
     const { userid, productid } = req.params
     const { cant } = req.body
@@ -448,7 +450,6 @@ export const passwordRecovery = async (req: Request, res: Response): Promise<Res
     send_mail(userName, user.email, token)
     return res.json({ "message": "Email successfully sent" })
 }
-
 
 /*
 AddProductToFavorite: Método que devuelve una promesa, es utilizado para agregar un producto a la lista de 
