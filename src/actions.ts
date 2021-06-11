@@ -12,7 +12,7 @@ import { send_mail } from './emailTemplates/passRecovery'
 import { totalmem } from 'os'
 import { Tasting } from './entities/Tasting'
 import { Company } from './entities/Company'
-import { Store } from './entities/Store' 
+import { Store } from './entities/Store'
 import { Event } from './entities/Event'
 import { EventUser } from './entities/EventUser'
 const image_finder = require('image-search-engine') //importamos image_finder para poder traer la imagen de los productos desde la api google sin tener una key
@@ -58,7 +58,7 @@ export const createUser = async (req: Request, res: Response): Promise<Response>
     const results = await userRepo.save(newUser)
     const token = jwt.sign({ newUser }, process.env.JWT_KEY as string, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN })
     refreshTokens.push(token)
-    return res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ "message":"User created successfully", token })
+    return res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ "message": "User created successfully", token })
 }
 
 /*
@@ -106,7 +106,7 @@ export const createBaseProducts = async (req: Request, res: Response): Promise<R
     const companyRepo = getRepository(Company)
     const company = await companyRepo.findOne({ where: { id: companyid } })
     if (!companyid) throw new Exception("Please specify a company id in url", 400)
-    if (!company) throw new Exception("Company id not exist!", 400)    
+    if (!company) throw new Exception("Company id not exist!", 400)
     const fetchProductsData = await fetch(baseURL, {
         headers: {
             'Content-Type': 'application/json',
@@ -225,11 +225,15 @@ export const resetPassword = async (req: Request, res: Response): Promise<Respon
     const userRepo = getRepository(User)
     const user = await userRepo.findOne({ where: { id: userid } })
     if (!user) throw new Exception("Invalid user id", 401)
-    if (!user.checkIfUnencryptedPasswordIsValid(oldPassword)) throw new Exception("Invalid old password", 401)
+    if (oldPassword.length > 20) {
+        if (!user.checkIfEncryptedPasswordIsValid(oldPassword)) throw new Exception("Invalid password", 401)
+    } else {
+        if (!user.checkIfUnencryptedPasswordIsValid(oldPassword)) throw new Exception("Invalid password", 401)
+    }
     const userPassword = new User()
     userPassword.password = newPassword
     userPassword.hashPassword()
-    const results = await userRepo.update(user, userPassword).then(() => { return res.json({"message": "Password Updated!"})})
+    const results = await userRepo.update(user, userPassword).then(() => { return res.json({ "message": "Password Updated!" }) })
     return res.json(results)
 }
 
@@ -259,7 +263,7 @@ export const updateUser = async (req: Request, res: Response): Promise<Response>
     user.phone_2 = phone_2
     user.date_of_birth = date_of_birth
     const users = await userRepo.save(user)
-    return res.json({"message":"User updated successfully"})
+    return res.json({ "message": "User updated successfully" })
 }
 
 /*
@@ -437,7 +441,7 @@ export const getCart = async (req: Request, res: Response): Promise<Response> =>
 /*
 PasswordRecovery: Método que devuelve una promesa, es utilizado para recuperar la password
 de un usuario, se recibe un email, valida que exista el correo, y envia un email al usuario
-con un link y token valido para que pueda resetear su contraseña. Devuele un mensaje acorde a
+con un link y token valido para que pueda resetear su contraseña. Devuelve un mensaje acorde a
 la acción solicitada.
 */
 export const passwordRecovery = async (req: Request, res: Response): Promise<Response> => {
@@ -448,7 +452,7 @@ export const passwordRecovery = async (req: Request, res: Response): Promise<Res
     refreshTokens.push(token)
     const userName = user.first_name + " " + user.last_name
     send_mail(userName, user.email, token)
-    return res.json({ "message": "Email successfully sent" })
+    return res.json({ "message": "Please check your mailbox" })
 }
 
 /*
@@ -644,7 +648,7 @@ export const createCompany = async (req: Request, res: Response): Promise<Respon
     oneCompany.store = store
     const newCompany = companyRepo.create(oneCompany)
     const results = await companyRepo.save(newCompany)
-    return res.json({"message":"Company created successfully"})
+    return res.json({ "message": "Company created successfully" })
 }
 
 /*
@@ -668,7 +672,7 @@ export const createStore = async (req: Request, res: Response): Promise<Response
     oneStore.phone_2 = phone_2
     const newStore = storeRepo.create(oneStore)
     const results = await storeRepo.save(newStore)
-    return res.json({"message":"Store created successfully"})
+    return res.json({ "message": "Store created successfully" })
 }
 
 /*
@@ -733,7 +737,7 @@ export const createEvent = async (req: Request, res: Response): Promise<Response
     oneEvent.product = product
     const newEvent = eventRepo.create(oneEvent)
     const results = await eventRepo.save(newEvent)
-    return res.json({"message":"Event created successfully"})
+    return res.json({ "message": "Event created successfully" })
 }
 
 /*
