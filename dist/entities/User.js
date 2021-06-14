@@ -62,6 +62,9 @@ var User = /** @class */ (function (_super) {
     User.prototype.checkIfUnencryptedPasswordIsValid = function (unencryptedPassword) {
         return bcrypt.compareSync(unencryptedPassword, this.password);
     };
+    User.prototype.checkIfEncryptedPasswordIsValid = function (encryptedPassword) {
+        return bcrypt.compare(encryptedPassword, this.password);
+    };
     __decorate([
         typeorm_1.PrimaryGeneratedColumn(),
         __metadata("design:type", Number)
@@ -99,6 +102,10 @@ var User = /** @class */ (function (_super) {
         typeorm_1.Column({ type: 'timestamptz', nullable: false }),
         __metadata("design:type", Date)
     ], User.prototype, "date_of_birth");
+    __decorate([
+        typeorm_1.Column({ "default": false }),
+        __metadata("design:type", Boolean)
+    ], User.prototype, "active");
     __decorate([
         typeorm_1.OneToMany(function () { return UserFavoriteProduct_1.UserFavoriteProduct; }, function (userFavoriteProduct) { return userFavoriteProduct.user; }),
         __metadata("design:type", Array)

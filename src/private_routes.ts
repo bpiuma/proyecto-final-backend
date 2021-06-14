@@ -38,6 +38,7 @@ router.post('/store',verifyToken,safe(actions.createStore));
 router.post('/company/add/store/:storeid',verifyToken,safe(actions.createCompany));
 router.delete('/logout',verifyToken, safe(actions.logout));
 router.put('/user/:userid/resetPassword', verifyToken, safe(actions.resetPassword));
+router.put('/user/:userid/activateUser', verifyToken, safe(actions.activateUser));
 router.put('/user/:id', verifyToken, safe(actions.updateUser));
 router.get('/user/:id', verifyToken, safe(actions.getUserById));
 router.delete('/user/:id', verifyToken, safe(actions.deleteUser));
