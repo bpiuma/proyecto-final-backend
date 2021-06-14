@@ -8,22 +8,23 @@ import fetch from 'cross-fetch' //importamos cross-fetch para poder traer desde 
 import extend from 'extend' //importamos extend para poder hacer un join de datos en formato json si fuera necesario
 import { Cart } from './entities/Cart'
 import { UserFavoriteProduct } from './entities/UserFavoriteProduct'
-import { send_mail } from './emailTemplates/passRecovery'
+import { send_mail_recovery } from './emailTemplates/passRecovery'
 import { totalmem } from 'os'
 import { Tasting } from './entities/Tasting'
 import { Company } from './entities/Company'
 import { Store } from './entities/Store'
 import { Event } from './entities/Event'
 import { EventUser } from './entities/EventUser'
+import { send_mail_activation } from './emailTemplates/userActivation'
 const image_finder = require('image-search-engine') //importamos image_finder para poder traer la imagen de los productos desde la api google sin tener una key
 
 export let refreshTokens: any[] = [] //esta variable se utiliza para guardar las sesiones validas del sitio
 
 /*
 CreateUser: Metodo que devuelve una promesa, es utilizado para crear el usuario al registrarse en el sitio
-Recibe por POST, datos personales y si esos datos son validos, los guarda en la base de datos.
-Si el usuario fue insertado en la bd satisfactoriamente, se encriptan los datos del usuario con JWT y se devuelven en un token,
-junto con un mensaje de exito.
+Recibe por POST, datos personales y si esos datos son validos, los guarda en la base de datos, con el campo active = false.
+Si el usuario fue insertado en la bd satisfactoriamente, se encriptan los datos del usuario con JWT, se devuelven en un token,
+junto con un mensaje de exito, y se envia un mail al la casilla del usurio para proceder a su activacion.
 */
 export const createUser = async (req: Request, res: Response): Promise<Response> => {
     const { first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth } = req.body
@@ -58,7 +59,9 @@ export const createUser = async (req: Request, res: Response): Promise<Response>
     const results = await userRepo.save(newUser)
     const token = jwt.sign({ newUser }, process.env.JWT_KEY as string, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN })
     refreshTokens.push(token)
-    return res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ "message": "User created successfully", token })
+    const userName = newUser.first_name + " " + newUser.last_name
+    send_mail_activation(userName, newUser.email, token)
+    return res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ "message": "Please check your mailbox", token })
 }
 
 /*
@@ -66,7 +69,7 @@ GetUsers: Método que devuelve una promesa, es utilizado para devolver los datos
 menos la password para que puedan ser utilizados en el sitio.
 */
 export const getUsers = async (req: Request, res: Response): Promise<Response> => {
-    const users = await getRepository(User).find({ select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth"] })
+    const users = await getRepository(User).find({ select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth", "active"] })
     return res.json(users)
 }
 
@@ -149,8 +152,10 @@ Login: Método que devuelve una promesa, es utilizado para loguear en el sitio a
 Recibe un usuario(email) y password, valida ambas entradas y devuelve un mensaje en caso de error, si
 se obtuvo exito en la validación, verifica que el usuario exista y que la password sea la de usuario,
 esta se guarda en la base de datos encriptada, por lo que se encripta la password ingresada por el usuario
-y se compara con el hash de password que hay guardado en la base de datos, si todo ok, se encriptan los datos del usuario 
-con JWT y se devuelven en un token, ademas de guardar una cookie de sesión.-
+y se compara con el hash de password que hay guardado en la base de datos.
+Si todo ok, y si el usuario está activo, se encriptan los datos del usuario con JWT y se devuelven en un 
+token, ademas de guardar una cookie de sesión.
+En caso de que el usuario este inactivo, se envía un mail de activacion a su casilla.
 */
 export const login = async (req: Request, res: Response): Promise<Response> => {
     let { email, password } = req.body
@@ -163,9 +168,18 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
     })
     if (!user) throw new Exception("Invalid email", 401)
     if (!user.checkIfUnencryptedPasswordIsValid(password)) throw new Exception("Invalid password", 401)
-    const token = jwt.sign({ user }, process.env.JWT_KEY as string, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN })
-    refreshTokens.push(token)
-    return res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ token })
+    // if (user.active == false) throw new Exception("Inactive user, please check your mailbox", 401) {
+    if (user.active == false) {
+        const token = jwt.sign({ user }, process.env.JWT_KEY as string, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN })
+        refreshTokens.push(token)
+        const userName = user.first_name + " " + user.last_name
+        send_mail_activation(userName, user.email, token)
+        return res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ "message": "Your user is not active, please check your mailbox", token })
+    } else {
+        const token = jwt.sign({ user }, process.env.JWT_KEY as string, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN })
+        refreshTokens.push(token)
+        return res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ token })
+    }
 }
 
 export const buscarImg = async (req: Request, res: Response) => {
@@ -238,6 +252,22 @@ export const resetPassword = async (req: Request, res: Response): Promise<Respon
 }
 
 /*
+ResetPassword: Método que devuelve una promesa, es utilizado para activar un usuario,
+recibe el id del usuario, valida que todo este correcto devuelve un mensaje de usuario activado, 
+de lo contrario tira error según corresponda.
+*/
+export const activateUser = async (req: Request, res: Response): Promise<Response> => {
+    const { userid } = req.params
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
+    const userRepo = getRepository(User)
+    const user = await userRepo.findOne({ where: { id: userid } })
+    if (!user) throw new Exception("Invalid user id", 401)
+    user.active = true
+    const users = await userRepo.save(user)
+    return res.json({ "message": "User activated successfully" })
+}
+
+/*
 UpdateUser: Método que devuelve una promesa, es utilizado para actualizar la información del usuario
 Recibe los datos básicos a actualizar del usuario, el identificador del usuario, y si lo encuentra
 actualiza la base de datos, de lo contrario si hay algun dato del usuario, como por ejemplo del email que
@@ -271,7 +301,7 @@ GetUserById: Método que devuelve una promesa, es utilizado para devolver un usu
 devuelve todos los datos del usuario menos la password.
 */
 export const getUserById = async (req: Request, res: Response): Promise<Response> => {
-    const user = await getRepository(User).findOne(req.params.id, { select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth"] })
+    const user = await getRepository(User).findOne(req.params.id, { select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth", "active"] })
     // verificamos que exista el usuario
     if (!user) throw new Exception("There is no user with this id")
     return res.json(user)
@@ -451,7 +481,7 @@ export const passwordRecovery = async (req: Request, res: Response): Promise<Res
     const token = jwt.sign({ user }, process.env.JWT_KEY as string, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN })
     refreshTokens.push(token)
     const userName = user.first_name + " " + user.last_name
-    send_mail(userName, user.email, token)
+    send_mail_recovery(userName, user.email, token)
     return res.json({ "message": "Please check your mailbox" })
 }
 

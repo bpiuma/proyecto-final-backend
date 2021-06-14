@@ -49,6 +49,9 @@ export class User extends BaseEntity {
     @Column({ type: 'timestamptz', nullable: false })
     date_of_birth: Date;
 
+    @Column({ default: false })
+    active: boolean;
+
     @OneToMany(() => UserFavoriteProduct, userFavoriteProduct => userFavoriteProduct.user)
     favorites: UserFavoriteProduct[];
 
@@ -59,5 +62,5 @@ export class User extends BaseEntity {
     carts: Cart[];
 
     @OneToMany(() => EventUser, eventUser => eventUser.user)
-    events: EventUser[];    
+    events: EventUser[];
 }
