@@ -8,7 +8,7 @@
  */
 import { Router } from 'express';
 import { safe } from './utils';
-import { createUser,login, getProducts, buscarImg, passwordRecovery } from './actions';
+import { createUser,login, getProducts, buscarImg, passwordRecovery,getProductId } from './actions';
 
 const router = Router();
 
@@ -16,6 +16,7 @@ const router = Router();
 router.post('/user', safe(createUser));
 router.post('/login', safe(login));
 router.get('/products', safe(getProducts));
+router.get('/products/:productid', safe(getProductId));
 router.post('/getImage', safe(buscarImg));
 router.post('/passwordRecovery', safe(passwordRecovery));
 

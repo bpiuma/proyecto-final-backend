@@ -55,6 +55,7 @@ export const createUser = async (req: Request, res: Response): Promise<Response>
     oneUser.phone_1 = phone_1
     oneUser.phone_2 = phone_2
     oneUser.date_of_birth = date_of_birth
+    oneUser.active = false;
     const newUser = userRepo.create(oneUser)
     const results = await userRepo.save(newUser)
     const token = jwt.sign({ newUser }, process.env.JWT_KEY as string, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN })
@@ -79,7 +80,13 @@ ordenados por el puntaje obtenido a nivel internacional por los catadores de los
 */
 export const getProducts = async (req: Request, res: Response): Promise<Response> => {
     const products = await getRepository(Product).find({ order: { points: 'DESC' } })
-    return res.json(products)
+    return res.json({"results" : products})
+}
+
+export const getProductId = async (req: Request, res: Response): Promise<Response> => {
+    const {productid} = req.params
+    const products = await getRepository(Product).findOne({ where: { id: productid } })
+    return res.json({"results" : products})
 }
 
 /*

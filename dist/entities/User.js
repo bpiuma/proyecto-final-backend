@@ -103,7 +103,7 @@ var User = /** @class */ (function (_super) {
         __metadata("design:type", Date)
     ], User.prototype, "date_of_birth");
     __decorate([
-        typeorm_1.Column({ "default": false }),
+        typeorm_1.Column({ nullable: false }),
         __metadata("design:type", Boolean)
     ], User.prototype, "active");
     __decorate([

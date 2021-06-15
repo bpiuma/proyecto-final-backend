@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.getEventUser = exports.addUserToEvent = exports.getEvents = exports.createEvent = exports.delProductToTasting = exports.createStore = exports.createCompany = exports.getTasting = exports.addProductToTasting = exports.delProductToFavorite = exports.getFavorites = exports.addProductToFavorite = exports.activateUser = exports.passwordRecovery = exports.getCart = exports.delProductToCart = exports.subProductToCart = exports.addProductToCart = exports.deleteUser = exports.getUserById = exports.updateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
+exports.getEventUser = exports.addUserToEvent = exports.getEvents = exports.createEvent = exports.delProductToTasting = exports.createStore = exports.createCompany = exports.getTasting = exports.addProductToTasting = exports.delProductToFavorite = exports.getFavorites = exports.addProductToFavorite = exports.passwordRecovery = exports.getCart = exports.delProductToCart = exports.subProductToCart = exports.addProductToCart = exports.deleteUser = exports.getUserById = exports.updateUser = exports.activateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProductId = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
@@ -49,19 +49,19 @@ var cross_fetch_1 = __importDefault(require("cross-fetch")); //importamos cross-
 var Cart_1 = require("./entities/Cart");
 var UserFavoriteProduct_1 = require("./entities/UserFavoriteProduct");
 var passRecovery_1 = require("./emailTemplates/passRecovery");
-var userActivation_1 = require("./emailTemplates/userActivation");
 var Tasting_1 = require("./entities/Tasting");
 var Company_1 = require("./entities/Company");
 var Store_1 = require("./entities/Store");
 var Event_1 = require("./entities/Event");
 var EventUser_1 = require("./entities/EventUser");
+var userActivation_1 = require("./emailTemplates/userActivation");
 var image_finder = require('image-search-engine'); //importamos image_finder para poder traer la imagen de los productos desde la api google sin tener una key
 exports.refreshTokens = []; //esta variable se utiliza para guardar las sesiones validas del sitio
 /*
 CreateUser: Metodo que devuelve una promesa, es utilizado para crear el usuario al registrarse en el sitio
-Recibe por POST, datos personales y si esos datos son validos, los guarda en la base de datos.
-Si el usuario fue insertado en la bd satisfactoriamente, se encriptan los datos del usuario con JWT y se devuelven en un token,
-junto con un mensaje de exito.
+Recibe por POST, datos personales y si esos datos son validos, los guarda en la base de datos, con el campo active = false.
+Si el usuario fue insertado en la bd satisfactoriamente, se encriptan los datos del usuario con JWT, se devuelven en un token,
+junto con un mensaje de exito, y se envia un mail al la casilla del usurio para proceder a su activacion.
 */
 var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, first_name, last_name, email, password, address, phone_1, phone_2, date_of_birth, userRepo, user, oneUser, newUser, results, token, userName;
@@ -108,6 +108,7 @@ var createUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
                 oneUser.phone_1 = phone_1;
                 oneUser.phone_2 = phone_2;
                 oneUser.date_of_birth = date_of_birth;
+                oneUser.active = false;
                 newUser = userRepo.create(oneUser);
                 return [4 /*yield*/, userRepo.save(newUser)];
             case 2:
@@ -129,7 +130,7 @@ var getUsers = function (req, res) { return __awaiter(void 0, void 0, void 0, fu
     var users;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, typeorm_1.getRepository(User_1.User).find({ select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth"] })];
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(User_1.User).find({ select: ["id", "first_name", "last_name", "email", "address", "phone_1", "phone_2", "date_of_birth", "active"] })];
             case 1:
                 users = _a.sent();
                 return [2 /*return*/, res.json(users)];
@@ -148,11 +149,25 @@ var getProducts = function (req, res) { return __awaiter(void 0, void 0, void 0,
             case 0: return [4 /*yield*/, typeorm_1.getRepository(Product_1.Product).find({ order: { points: 'DESC' } })];
             case 1:
                 products = _a.sent();
-                return [2 /*return*/, res.json(products)];
+                return [2 /*return*/, res.json({ "results": products })];
         }
     });
 }); };
 exports.getProducts = getProducts;
+var getProductId = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var productid, products;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                productid = req.params.productid;
+                return [4 /*yield*/, typeorm_1.getRepository(Product_1.Product).findOne({ where: { id: productid } })];
+            case 1:
+                products = _a.sent();
+                return [2 /*return*/, res.json({ "results": products })];
+        }
+    });
+}); };
+exports.getProductId = getProductId;
 /*
 CreateProducts: Método que devuelve una promesa, es utilizado para dar de alta productos en la tienda
 Recibe una url de donde sacar los productos, y una companyid para anexarle esos productos a la compañia
@@ -260,11 +275,13 @@ Login: Método que devuelve una promesa, es utilizado para loguear en el sitio a
 Recibe un usuario(email) y password, valida ambas entradas y devuelve un mensaje en caso de error, si
 se obtuvo exito en la validación, verifica que el usuario exista y que la password sea la de usuario,
 esta se guarda en la base de datos encriptada, por lo que se encripta la password ingresada por el usuario
-y se compara con el hash de password que hay guardado en la base de datos, si todo ok, se encriptan los datos del usuario
-con JWT y se devuelven en un token, ademas de guardar una cookie de sesión.-
+y se compara con el hash de password que hay guardado en la base de datos.
+Si todo ok, y si el usuario está activo, se encriptan los datos del usuario con JWT y se devuelven en un
+token, ademas de guardar una cookie de sesión.
+En caso de que el usuario este inactivo, se envía un mail de activacion a su casilla.
 */
 var login = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var _a, email, password, userRepo, user, token;
+    var _a, email, password, userRepo, user, token, userName, token;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
@@ -285,9 +302,20 @@ var login = function (req, res) { return __awaiter(void 0, void 0, void 0, funct
                     throw new utils_1.Exception("Invalid email", 401);
                 if (!user.checkIfUnencryptedPasswordIsValid(password))
                     throw new utils_1.Exception("Invalid password", 401);
-                token = jsonwebtoken_1["default"].sign({ user: user }, process.env.JWT_KEY, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN });
-                exports.refreshTokens.push(token);
-                return [2 /*return*/, res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ token: token })];
+                // if (user.active == false) throw new Exception("Inactive user, please check your mailbox", 401) {
+                if (user.active == false) {
+                    token = jsonwebtoken_1["default"].sign({ user: user }, process.env.JWT_KEY, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN });
+                    exports.refreshTokens.push(token);
+                    userName = user.first_name + " " + user.last_name;
+                    userActivation_1.send_mail_activation(userName, user.email, token);
+                    return [2 /*return*/, res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ "message": "Your user is not active, please check your mailbox", token: token })];
+                }
+                else {
+                    token = jsonwebtoken_1["default"].sign({ user: user }, process.env.JWT_KEY, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN });
+                    exports.refreshTokens.push(token);
+                    return [2 /*return*/, res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ token: token })];
+                }
+                return [2 /*return*/];
         }
     });
 }); };
@@ -392,6 +420,34 @@ var resetPassword = function (req, res) { return __awaiter(void 0, void 0, void 
 }); };
 exports.resetPassword = resetPassword;
 /*
+ResetPassword: Método que devuelve una promesa, es utilizado para activar un usuario,
+recibe el id del usuario, valida que todo este correcto devuelve un mensaje de usuario activado,
+de lo contrario tira error según corresponda.
+*/
+var activateUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userid, userRepo, user, users;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userid = req.params.userid;
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                userRepo = typeorm_1.getRepository(User_1.User);
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 1:
+                user = _a.sent();
+                if (!user)
+                    throw new utils_1.Exception("Invalid user id", 401);
+                user.active = true;
+                return [4 /*yield*/, userRepo.save(user)];
+            case 2:
+                users = _a.sent();
+                return [2 /*return*/, res.json({ "message": "User activated successfully" })];
+        }
+    });
+}); };
+exports.activateUser = activateUser;
+/*
 UpdateUser: Método que devuelve una promesa, es utilizado para actualizar la información del usuario
 Recibe los datos básicos a actualizar del usuario, el identificador del usuario, y si lo encuentra
 actualiza la base de datos, de lo contrario si hay algun dato del usuario, como por ejemplo del email que
@@ -413,12 +469,11 @@ var updateUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
                 if (!user)
                     throw new utils_1.Exception("There is no user with this id");
                 if (!(email != user.email)) return [3 /*break*/, 3];
-                return [4 /*yield*/, userRepo.findOne({ where: { email: email } })
-                    //if (user2) throw new Exception("There is another user with this email")
-                ];
+                return [4 /*yield*/, userRepo.findOne({ where: { email: email } })];
             case 2:
                 user2 = _b.sent();
-                //if (user2) throw new Exception("There is another user with this email")
+                if (user2)
+                    throw new utils_1.Exception("There is another user with this email");
                 if (!validateEmail(email))
                     throw new utils_1.Exception("Please provide a valid email address");
                 _b.label = 3;
@@ -430,7 +485,6 @@ var updateUser = function (req, res) { return __awaiter(void 0, void 0, void 0, 
                 user.phone_1 = phone_1;
                 user.phone_2 = phone_2;
                 user.date_of_birth = date_of_birth;
-                user.active = true;
                 return [4 /*yield*/, userRepo.save(user)];
             case 4:
                 users = _b.sent();
@@ -737,28 +791,6 @@ var passwordRecovery = function (req, res) { return __awaiter(void 0, void 0, vo
     });
 }); };
 exports.passwordRecovery = passwordRecovery;
-var activateUser = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var userRepo, user, users, token;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                userRepo = typeorm_1.getRepository(User_1.User);
-                return [4 /*yield*/, userRepo.findOne({ where: { email: req.body.email } })];
-            case 1:
-                user = _a.sent();
-                if (!user)
-                    throw new utils_1.Exception("Invalid email", 401);
-                user.active = true;
-                return [4 /*yield*/, userRepo.save(user)];
-            case 2:
-                users = _a.sent();
-                token = jsonwebtoken_1["default"].sign({ user: user }, process.env.JWT_KEY, { expiresIn: process.env.JWT_TOKEN_EXPIRE_IN });
-                exports.refreshTokens.push(token);
-                return [2 /*return*/, res.cookie('auth-token', token, { httpOnly: true, path: '/', domain: 'localhost' }).json({ "message": "User activated successfully", token: token })];
-        }
-    });
-}); };
-exports.activateUser = activateUser;
 /*
 AddProductToFavorite: Método que devuelve una promesa, es utilizado para agregar un producto a la lista de
 favoritos del usuario, recibe un usuario id y un producto id, valida todos los datos y si el producto esta
