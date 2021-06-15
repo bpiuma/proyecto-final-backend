@@ -49,7 +49,7 @@ export class User extends BaseEntity {
     @Column({ type: 'timestamptz', nullable: false })
     date_of_birth: Date;
 
-    @Column({ default: false })
+    @Column({nullable:false})
     active: boolean;
 
     @OneToMany(() => UserFavoriteProduct, userFavoriteProduct => userFavoriteProduct.user)
