@@ -248,6 +248,7 @@ var createBaseProducts = function (req, res) { return __awaiter(void 0, void 0, 
                                             req.body.country = item.country;
                                             req.body.winery = item.winery;
                                             req.body.company = company;
+                                            req.body.imagebig = "";
                                             newProduct = typeorm_1.getRepository(Product_1.Product).create(req.body) //Creo por cada iteración el producto
                                             ;
                                             return [4 /*yield*/, typeorm_1.getRepository(Product_1.Product).save(newProduct)]; //Grabo el nuevo personaje              

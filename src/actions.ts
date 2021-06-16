@@ -145,6 +145,7 @@ export const createBaseProducts = async (req: Request, res: Response): Promise<R
             req.body.country = item.country
             req.body.winery = item.winery
             req.body.company = company
+            req.body.imagebig = ""
             const newProduct = getRepository(Product).create(req.body)  //Creo por cada iteración el producto
             const results = await getRepository(Product).save(newProduct) //Grabo el nuevo personaje              
         })

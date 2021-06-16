@@ -55,6 +55,9 @@ export class Product extends BaseEntity {
 
     @Column({nullable: true })
     image: string;
+
+    @Column({nullable: true })
+    imagebig: string;
     
     @ManyToOne(() => Company, company => company.products)
     company: Company;
