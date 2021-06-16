@@ -100,6 +100,10 @@ var Product = /** @class */ (function (_super) {
         __metadata("design:type", String)
     ], Product.prototype, "image");
     __decorate([
+        typeorm_1.Column({ nullable: true }),
+        __metadata("design:type", String)
+    ], Product.prototype, "imagebig");
+    __decorate([
         typeorm_1.ManyToOne(function () { return Company_1.Company; }, function (company) { return company.products; }),
         __metadata("design:type", Company_1.Company)
     ], Product.prototype, "company");
