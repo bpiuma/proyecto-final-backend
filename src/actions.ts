@@ -402,7 +402,7 @@ export const subProductToCart = async (req: Request, res: Response): Promise<Res
         }
     })
     if (userCartProduct) {
-        userCartProduct.amount = (product.price * cant) - userCartProduct.amount
+        userCartProduct.amount = userCartProduct.amount - (product.price * cant)
         userCartProduct.cant = (userCartProduct.cant - cant)
         if (userCartProduct.cant > 0) {
             await cartRepo.save(userCartProduct).then(() => {
@@ -447,6 +447,32 @@ export const delProductToCart = async (req: Request, res: Response): Promise<Res
         })
     } else return res.json({ "message": "User/Product not exist in cart!" })
     return res.json({ "message": "Cart not updated" })
+}
+
+/*
+EmptyCart: Método que devuelve una promesa, es utilizado para vaciar el carrito de compras
+de un usuario, recibe el usuario id, valida todos los datos y devuelve mensaje de confirmación
+*/
+export const emptyCart = async (req: Request, res: Response): Promise<Response> => {
+    const { userid } = req.params
+    const userRepo = getRepository(User)
+    const cartRepo = getRepository(Cart)
+    const user = await userRepo.findOne({ where: { id: userid } })
+    if (!userid) throw new Exception("Please specify a user id in url", 400)
+    if (!user) throw new Exception("User not found")
+    const userCartProduct = await cartRepo.find({
+        relations: ['product'],
+        where: {
+            user: user
+        }
+    })
+    console.log(userCartProduct)
+    if (userCartProduct.length) {
+        for (let i = 0; i < userCartProduct.length; i++) {
+            await cartRepo.delete(userCartProduct[i]);           
+        }
+        return res.json({ "message": "The cart has been emptied" })
+    } else throw new Exception("The user has no products in car", 400)
 }
 
 /*
