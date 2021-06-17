@@ -8,7 +8,7 @@
  */
 import { Router } from 'express';
 import { safe } from './utils';
-import { createUser,login, getProducts, buscarImg, passwordRecovery,getProductId } from './actions';
+import { createUser,login, getProducts, buscarImg, passwordRecovery,getProductId,getEvents} from './actions';
 
 const router = Router();
 
@@ -19,5 +19,5 @@ router.get('/products', safe(getProducts));
 router.get('/products/:productid', safe(getProductId));
 router.post('/getImage', safe(buscarImg));
 router.post('/passwordRecovery', safe(passwordRecovery));
-
+router.get('/events', safe(getEvents));
 export default router;

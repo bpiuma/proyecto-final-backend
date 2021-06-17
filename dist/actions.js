@@ -39,7 +39,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 exports.__esModule = true;
-exports.getEventUser = exports.addUserToEvent = exports.getEvents = exports.createEvent = exports.delProductToTasting = exports.createStore = exports.createCompany = exports.getTasting = exports.addProductToTasting = exports.delProductToFavorite = exports.getFavorites = exports.addProductToFavorite = exports.passwordRecovery = exports.getCart = exports.delProductToCart = exports.subProductToCart = exports.addProductToCart = exports.deleteUser = exports.getUserById = exports.updateUser = exports.activateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProductId = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
+exports.getEventUser = exports.addUserToEvent = exports.getEvents = exports.createEvent = exports.delProductToTasting = exports.createStore = exports.createCompany = exports.getTasting = exports.addProductToTasting = exports.delProductToFavorite = exports.getFavorites = exports.addProductToFavorite = exports.passwordRecovery = exports.getCart = exports.emptyCart = exports.delProductToCart = exports.subProductToCart = exports.addProductToCart = exports.deleteUser = exports.getUserById = exports.updateUser = exports.activateUser = exports.resetPassword = exports.logout = exports.buscarImg = exports.login = exports.createBaseProducts = exports.getProductId = exports.getProducts = exports.getUsers = exports.createUser = exports.refreshTokens = void 0;
 var typeorm_1 = require("typeorm"); // getRepository"  traer una tabla de la base de datos asociada al objeto
 var User_1 = require("./entities/User");
 var Product_1 = require("./entities/Product");
@@ -652,7 +652,7 @@ var subProductToCart = function (req, res) { return __awaiter(void 0, void 0, vo
             case 3:
                 userCartProduct = _b.sent();
                 if (!userCartProduct) return [3 /*break*/, 8];
-                userCartProduct.amount = (product.price * cant) - userCartProduct.amount;
+                userCartProduct.amount = userCartProduct.amount - (product.price * cant);
                 userCartProduct.cant = (userCartProduct.cant - cant);
                 if (!(userCartProduct.cant > 0)) return [3 /*break*/, 5];
                 return [4 /*yield*/, cartRepo.save(userCartProduct).then(function () {
@@ -725,6 +725,52 @@ var delProductToCart = function (req, res) { return __awaiter(void 0, void 0, vo
     });
 }); };
 exports.delProductToCart = delProductToCart;
+/*
+EmptyCart: Método que devuelve una promesa, es utilizado para vaciar el carrito de compras
+de un usuario, recibe el usuario id, valida todos los datos y devuelve mensaje de confirmación
+*/
+var emptyCart = function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var userid, userRepo, cartRepo, user, userCartProduct, i;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0:
+                userid = req.params.userid;
+                userRepo = typeorm_1.getRepository(User_1.User);
+                cartRepo = typeorm_1.getRepository(Cart_1.Cart);
+                return [4 /*yield*/, userRepo.findOne({ where: { id: userid } })];
+            case 1:
+                user = _a.sent();
+                if (!userid)
+                    throw new utils_1.Exception("Please specify a user id in url", 400);
+                if (!user)
+                    throw new utils_1.Exception("User not found");
+                return [4 /*yield*/, cartRepo.find({
+                        relations: ['product'],
+                        where: {
+                            user: user
+                        }
+                    })];
+            case 2:
+                userCartProduct = _a.sent();
+                console.log(userCartProduct);
+                if (!userCartProduct.length) return [3 /*break*/, 7];
+                i = 0;
+                _a.label = 3;
+            case 3:
+                if (!(i < userCartProduct.length)) return [3 /*break*/, 6];
+                return [4 /*yield*/, cartRepo["delete"](userCartProduct[i])];
+            case 4:
+                _a.sent();
+                _a.label = 5;
+            case 5:
+                i++;
+                return [3 /*break*/, 3];
+            case 6: return [2 /*return*/, res.json({ "message": "The cart has been emptied" })];
+            case 7: throw new utils_1.Exception("The user has no products in car", 400);
+        }
+    });
+}); };
+exports.emptyCart = emptyCart;
 /*
 GetCart: Método que devuelve una promesa, es utilizado para devolver el carrito de compras
 de un usuario, recibe el usuario id, valida todos los datos y devuelve el carrito de compra
@@ -1246,12 +1292,10 @@ var getEvents = function (req, res) { return __awaiter(void 0, void 0, void 0, f
     var events;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, typeorm_1.getRepository(Event_1.Event).find({
-                    relations: ['product']
-                })];
+            case 0: return [4 /*yield*/, typeorm_1.getRepository(Event_1.Event).find()];
             case 1:
                 events = _a.sent();
-                return [2 /*return*/, res.json(events)];
+                return [2 /*return*/, res.json({ "results": events })];
         }
     });
 }); };
