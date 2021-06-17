@@ -54,7 +54,6 @@ router.post('/tasting/add/user/:userid/product/:productid',verifyToken,safe(acti
 router.get('/tasting/user/:userid',verifyToken,safe(actions.getTasting));
 router.delete('/tasting/delete/user/:userid/product/:productid',verifyToken,safe(actions.delProductToTasting));
 router.post('/event/product/:productid',verifyToken,safe(actions.createEvent));
-router.get('/event',verifyToken,safe(actions.getEvents));
 router.post('/event/add/:eventid/user/:userid',verifyToken,safe(actions.addUserToEvent));
 router.get('/event/user/:userid',verifyToken,safe(actions.getEventUser));
 export default router;

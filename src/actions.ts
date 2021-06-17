@@ -809,10 +809,8 @@ GetEvents: Método que devuelve una promesa, es utilizado para devolver una list
 y los productos que se presentaran en cada evento.
 */
 export const getEvents = async (req: Request, res: Response): Promise<Response> => {
-    const events = await getRepository(Event).find({
-        relations: ['product']
-    })
-    return res.json(events)
+    const events = await getRepository(Event).find()
+    return res.json({"results" : events})
 }
 
 /*
